@@ -56,6 +56,14 @@ Edit `.env.local` and set `DATABASE_URL`, e.g.
 Optionally set `VITE_APP_NAME` to change the name shown in the app.
 Don't put `PORT` in `.env.local` (it would move the dev server).
 
+If you use Claude Code here, link its copy of the shadcn skill (a junction
+holds an absolute path, so it isn't committed):
+
+```powershell
+New-Item -ItemType Directory -Force .claude\skills | Out-Null
+New-Item -ItemType Junction -Path .claude\skills\shadcn -Target (Resolve-Path .agents\skills\shadcn).Path
+```
+
 ### 5. Create the tables and build
 
 ```powershell

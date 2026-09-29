@@ -12,3 +12,5 @@ dist-ssr
 __unconfig*
 todos.json
 logs
+# Junction to .agents/skills (absolute path, recreate per machine; see README)
+.claude/skills
