@@ -5,9 +5,8 @@ shown as a file tree. No accounts, no sync. It runs on your own Windows
 machine, starts at logon and serves on **http://localhost:8008**.
 
 Stack: TanStack Start (React 19) on Nitro/Node, MySQL via Drizzle, shadcn/ui
-
-- Tailwind. See [`CLAUDE.md`](./CLAUDE.md) for architecture and conventions
-  and [`TASKS.md`](./TASKS.md) for the work log.
+and Tailwind. See [`CLAUDE.md`](./CLAUDE.md) for architecture and
+conventions and [`TASKS.md`](./TASKS.md) for the work log.
 
 ## Set up on a new machine
 
@@ -114,6 +113,7 @@ once with
 | Restart the server                | `.\scripts\install-startup.ps1`                                         |
 | Check it's running                | `Get-ScheduledTask Bookmarks` / open `logs\server.log`                  |
 | Stop until next logon             | `.\scripts\stop.ps1`                                                    |
+| Start again after `stop.ps1`      | `Start-ScheduledTask Bookmarks`                                         |
 | Stop and remove from startup      | `.\scripts\uninstall-startup.ps1`                                       |
 | Back up the data                  | `mysqldump -u root -p bookmarks > bookmarks.sql`                        |
 | Restore a backup                  | `mysql -u root -p bookmarks < bookmarks.sql`                            |
