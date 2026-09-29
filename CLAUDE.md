@@ -152,7 +152,7 @@ See `.env.example`. Real values go in `.env.local` (gitignored):
 `DATABASE_URL`. Don't put `PORT` in `.env.local` — Vite picks it up and moves
 the dev server off 3000. The always-on production instance uses port 8008,
 set by `scripts/start.ps1` and run at logon by a Scheduled Task
-(`scripts/install-startup.ps1` / `uninstall-startup.ps1`). Setup and deploy
+(`scripts/install-startup.ps1` / `uninstall-startup.ps1` / `stop.ps1`). Setup and deploy
 steps are in the README — keep them in sync when changing any of this.
 
 ## Skill loading (TanStack Intent)

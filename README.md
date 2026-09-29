@@ -71,8 +71,9 @@ pnpm build
 ```
 
 This registers a Windows Scheduled Task called **Bookmarks** that runs
-`scripts\start.ps1` in a hidden window each time you log on, and starts it
-straight away. Open http://localhost:8008.
+`scripts\start.ps1` each time you log on, and starts it straight away. It
+runs under `conhost --headless`, so there is **no window** to close by
+accident. Open http://localhost:8008.
 
 No admin rights are needed. If PowerShell refuses to run the script, run it
 once with
@@ -82,7 +83,12 @@ once with
 
 - `scripts\start.ps1` sets `PORT=8008`, kills any server a previous run left
   behind, and runs `.output\server\index.mjs` with `.env.local` loaded. If
-  the server exits it restarts it after 5 seconds.
+  the server exits it restarts it after 5 seconds. Ending `node.exe` in
+  Task Manager therefore just restarts it; to really stop it, use
+  `scripts\stop.ps1` or `uninstall-startup.ps1`.
+- Don't use plain `powershell -WindowStyle Hidden` as the task action: when
+  Windows Terminal is the default terminal it opens a visible window anyway,
+  and closing that window kills the server.
 - Output goes to `logs\server.log`, which is cleared each time the task
   starts.
 - The server listens on **all interfaces**, so other devices on your network
@@ -107,13 +113,14 @@ once with
 | Deploy changes (after `git pull`) | `pnpm install; pnpm db:push; pnpm build; .\scripts\install-startup.ps1` |
 | Restart the server                | `.\scripts\install-startup.ps1`                                         |
 | Check it's running                | `Get-ScheduledTask Bookmarks` / open `logs\server.log`                  |
+| Stop until next logon             | `.\scripts\stop.ps1`                                                    |
 | Stop and remove from startup      | `.\scripts\uninstall-startup.ps1`                                       |
 | Back up the data                  | `mysqldump -u root -p bookmarks > bookmarks.sql`                        |
 | Restore a backup                  | `mysql -u root -p bookmarks < bookmarks.sql`                            |
 
 Re-running `install-startup.ps1` replaces the task and restarts the server,
 which is what picks up a new build. `Stop-ScheduledTask` on its own doesn't
-stop the server; use `uninstall-startup.ps1`.
+stop the server (it only ends the `conhost` wrapper); use `stop.ps1`.
 
 To move your bookmarks to a new machine, dump the database on the old one
 and restore it on the new one after step 3.

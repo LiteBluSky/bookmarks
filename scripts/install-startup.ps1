@@ -9,9 +9,12 @@ $ErrorActionPreference = 'Stop'
 $startScript = Join-Path $PSScriptRoot 'start.ps1'
 $user = "$env:USERDOMAIN\$env:USERNAME"
 
+# `conhost --headless` runs the console with no window at all. Plain
+# `powershell -WindowStyle Hidden` isn't enough: when Windows Terminal is the
+# default terminal it shows a window anyway, and closing it kills the server.
 $action = New-ScheduledTaskAction `
-  -Execute 'powershell.exe' `
-  -Argument "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$startScript`"" `
+  -Execute 'conhost.exe' `
+  -Argument "--headless powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$startScript`"" `
   -WorkingDirectory (Split-Path -Parent $PSScriptRoot)
 
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
@@ -30,6 +33,7 @@ if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
   Stop-ScheduledTask -TaskName $TaskName
   Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
 }
+& (Join-Path $PSScriptRoot 'stop.ps1')
 
 Register-ScheduledTask -TaskName $TaskName `
   -Description 'Local bookmark manager on http://localhost:8008' `
