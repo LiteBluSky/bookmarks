@@ -1,0 +1,196 @@
+import { asc, eq, isNull, max } from 'drizzle-orm'
+
+import { db } from '@/db'
+import { folders, links } from '@/db/schema'
+import type { FolderInput, LinkInput, MoveInput } from '@/lib/schemas'
+import { reorderIds } from '@/lib/tree'
+
+// Server-only DB helpers. Only import from *.functions.ts.
+
+export async function loadTree() {
+  const [allFolders, allLinks] = await Promise.all([
+    db.select().from(folders).orderBy(asc(folders.position), asc(folders.name)),
+    db.select().from(links).orderBy(asc(links.position), asc(links.title)),
+  ])
+  return { folders: allFolders, links: allLinks }
+}
+
+async function nextFolderPosition(parentId: number | null) {
+  const [row] = await db
+    .select({ value: max(folders.position) })
+    .from(folders)
+    .where(
+      parentId === null
+        ? isNull(folders.parentId)
+        : eq(folders.parentId, parentId),
+    )
+  return (row.value ?? -1) + 1
+}
+
+async function nextLinkPosition(folderId: number | null) {
+  const [row] = await db
+    .select({ value: max(links.position) })
+    .from(links)
+    .where(
+      folderId === null ? isNull(links.folderId) : eq(links.folderId, folderId),
+    )
+  return (row.value ?? -1) + 1
+}
+
+async function assertFolderExists(id: number | null) {
+  if (id === null) return
+  const row = (
+    await db.select({ id: folders.id }).from(folders).where(eq(folders.id, id))
+  ).at(0)
+  if (!row) throw new Error('Folder not found')
+}
+
+// Walks up from `targetParentId` to make sure `folderId` isn't one of its
+// ancestors — otherwise the move would create a cycle.
+async function assertNotDescendant(
+  folderId: number,
+  targetParentId: number | null,
+) {
+  let current = targetParentId
+  while (current !== null) {
+    if (current === folderId) {
+      throw new Error("A folder can't be moved into itself or its subfolders")
+    }
+    const row = (
+      await db
+        .select({ parentId: folders.parentId })
+        .from(folders)
+        .where(eq(folders.id, current))
+    ).at(0)
+    current = row?.parentId ?? null
+  }
+}
+
+function titleFromUrl(url: string) {
+  return new URL(url).hostname.replace(/^www\./, '')
+}
+
+export async function insertFolder(input: FolderInput) {
+  await assertFolderExists(input.parentId)
+  const position = await nextFolderPosition(input.parentId)
+  const [result] = await db.insert(folders).values({ ...input, position })
+  return { id: result.insertId }
+}
+
+export async function editFolder(id: number, input: FolderInput) {
+  await assertFolderExists(input.parentId)
+  await assertNotDescendant(id, input.parentId)
+  const existing = (
+    await db
+      .select({ parentId: folders.parentId })
+      .from(folders)
+      .where(eq(folders.id, id))
+  ).at(0)
+  if (!existing) throw new Error('Folder not found')
+
+  const moved = existing.parentId !== input.parentId
+  await db
+    .update(folders)
+    .set({
+      ...input,
+      ...(moved && { position: await nextFolderPosition(input.parentId) }),
+    })
+    .where(eq(folders.id, id))
+}
+
+export async function removeFolder(id: number) {
+  // FK cascades take care of subfolders and links.
+  await db.delete(folders).where(eq(folders.id, id))
+}
+
+export async function insertLink(input: LinkInput) {
+  await assertFolderExists(input.folderId)
+  const position = await nextLinkPosition(input.folderId)
+  const [result] = await db.insert(links).values({
+    ...input,
+    title: input.title || titleFromUrl(input.url),
+    description: input.description || null,
+    position,
+  })
+  return { id: result.insertId }
+}
+
+export async function editLink(id: number, input: LinkInput) {
+  await assertFolderExists(input.folderId)
+  const existing = (
+    await db
+      .select({ folderId: links.folderId })
+      .from(links)
+      .where(eq(links.id, id))
+  ).at(0)
+  if (!existing) throw new Error('Link not found')
+
+  const moved = existing.folderId !== input.folderId
+  await db
+    .update(links)
+    .set({
+      ...input,
+      title: input.title || titleFromUrl(input.url),
+      description: input.description || null,
+      ...(moved && { position: await nextLinkPosition(input.folderId) }),
+    })
+    .where(eq(links.id, id))
+}
+
+export async function removeLink(id: number) {
+  await db.delete(links).where(eq(links.id, id))
+}
+
+// Rewrites sibling positions 0..n so the moved item lands at `index`.
+export async function moveItem({ kind, id, parentId, index }: MoveInput) {
+  await assertFolderExists(parentId)
+  if (kind === 'folder') await assertNotDescendant(id, parentId)
+
+  await db.transaction(async (tx) => {
+    if (kind === 'folder') {
+      const siblings = await tx
+        .select({ id: folders.id })
+        .from(folders)
+        .where(
+          parentId === null
+            ? isNull(folders.parentId)
+            : eq(folders.parentId, parentId),
+        )
+        .orderBy(asc(folders.position), asc(folders.name))
+      const order = reorderIds(
+        siblings.map((s) => s.id),
+        id,
+        index,
+      )
+      for (const [position, siblingId] of order.entries()) {
+        await tx
+          .update(folders)
+          .set(siblingId === id ? { position, parentId } : { position })
+          .where(eq(folders.id, siblingId))
+      }
+    } else {
+      const siblings = await tx
+        .select({ id: links.id })
+        .from(links)
+        .where(
+          parentId === null
+            ? isNull(links.folderId)
+            : eq(links.folderId, parentId),
+        )
+        .orderBy(asc(links.position), asc(links.title))
+      const order = reorderIds(
+        siblings.map((s) => s.id),
+        id,
+        index,
+      )
+      for (const [position, siblingId] of order.entries()) {
+        await tx
+          .update(links)
+          .set(
+            siblingId === id ? { position, folderId: parentId } : { position },
+          )
+          .where(eq(links.id, siblingId))
+      }
+    }
+  })
+}

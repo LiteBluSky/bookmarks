@@ -1,0 +1,39 @@
+import { useEffect, useRef } from 'react'
+
+// Global keyboard shortcuts. Ctrl on Windows/Linux, ⌘ on macOS. Keys chosen
+// to avoid ones browsers reserve or users rely on (Ctrl+L/N/T/W/F).
+export const SHORTCUTS = {
+  search: { key: 'k', label: 'K' },
+  newLink: { key: 'b', label: 'B' },
+  newFolder: { key: 'g', label: 'G' },
+} as const
+
+export type ShortcutName = keyof typeof SHORTCUTS
+
+export const MOD_LABEL = 'Ctrl'
+
+export function useShortcuts(
+  handlers: Record<ShortcutName, () => void>,
+  enabled = true,
+) {
+  // Keep the listener stable while always calling the latest handlers.
+  const latest = useRef(handlers)
+  latest.current = handlers
+
+  useEffect(() => {
+    if (!enabled) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return
+      const key = e.key.toLowerCase()
+      for (const [name, shortcut] of Object.entries(SHORTCUTS)) {
+        if (shortcut.key === key) {
+          e.preventDefault()
+          latest.current[name as ShortcutName]()
+          return
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [enabled])
+}
