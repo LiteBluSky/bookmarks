@@ -49,6 +49,8 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] Drag-and-drop reorder/move (native HTML5; optimistic)
 - [x] Move up/down menu items (keyboard alternative to dragging)
 - [x] Vim motions in the tree (hjkl, gg/G, o) + arrow keys
+- [x] `r` on a focused row opens its edit dialog
+- [x] `x` cut / `p` paste a link (sticky toast, `Esc` cancels)
 
 ## 5. Find
 

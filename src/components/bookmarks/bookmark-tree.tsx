@@ -57,6 +57,8 @@ type TreeProps = {
   forceOpen: boolean
   onToggle: (id: number, open: boolean) => void
   onEdit: OpenEditor
+  /** Link currently cut (keyboard `x`), shown dimmed until pasted. */
+  cutId: number | null
 }
 
 export function BookmarkTree({ tree, ...props }: TreeProps & { tree: Tree }) {
@@ -105,6 +107,7 @@ function Level({
           link={link}
           depth={depth}
           onEdit={props.onEdit}
+          isCut={props.cutId === link.id}
         />
       ))}
     </>
@@ -247,10 +250,12 @@ function LinkRow({
   link,
   depth,
   onEdit,
+  isCut,
 }: {
   link: Link
   depth: number
   onEdit: OpenEditor
+  isCut: boolean
 }) {
   const item = { kind: 'link', id: link.id } as const
   const { rowProps, dropZone, isDragging } = useTreeRowDnd(
@@ -276,7 +281,11 @@ function LinkRow({
       {...rowProps}
       data-drop={dropZone}
       data-dragging={isDragging || undefined}
-      className={cn('group/row flex items-center gap-1', DROP_ROW)}
+      data-cut={isCut || undefined}
+      className={cn(
+        'group/row flex items-center gap-1 data-cut:opacity-50',
+        DROP_ROW,
+      )}
       style={
         {
           paddingLeft: indent,

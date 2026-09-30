@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/input-group'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Separator } from '@/components/ui/separator'
+import { useCutLink } from '@/hooks/use-cut-link'
 import { useExpandedFolders } from '@/hooks/use-expanded-folders'
 import { useTreeKeyboard } from '@/hooks/use-tree-keyboard'
 import { APP_NAME } from '@/lib/config'
@@ -66,12 +67,30 @@ function Home() {
     searchRef.current?.focus()
     searchRef.current?.select()
   }
+  const clipboard = useCutLink({
+    tree,
+    links: data.links,
+    onExpand: (id) => setOpen(id, true),
+  })
+
   const treeRef = useRef<HTMLDivElement>(null)
   useTreeKeyboard({
     containerRef: treeRef,
     expanded,
     setOpen,
     onSearch: focusSearch,
+    onEdit: (kind, id) => {
+      if (kind === 'folder') {
+        const folder = data.folders.find((f) => f.id === id)
+        if (folder) openEditor({ kind, folder, parentId: folder.parentId })
+      } else {
+        const link = data.links.find((l) => l.id === id)
+        if (link) openEditor({ kind, link, folderId: link.folderId })
+      }
+    },
+    onCut: clipboard.cut,
+    onPaste: clipboard.paste,
+    onCancelCut: clipboard.cancel,
     enabled: !editorOpen,
   })
   // Disabled while a dialog is open so shortcuts don't stack editors.
@@ -193,6 +212,7 @@ function Home() {
               forceOpen={searching}
               onToggle={setOpen}
               onEdit={openEditor}
+              cutId={clipboard.cutId}
             />
           </TreeDndProvider>
         </div>

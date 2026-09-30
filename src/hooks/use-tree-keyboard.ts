@@ -8,6 +8,8 @@ import type { RefObject } from 'react'
 //   l / →  expand folder, or step into its first child
 //   gg     first row         G      last row
 //   o      open link / toggle folder (Enter works natively too)
+//   r      edit (rename / move) the focused folder or link
+//   x      cut the focused link   p  paste it here   Esc  cancel the cut
 //   /      focus search
 //
 // Rows opt in by putting these on their focusable element:
@@ -29,17 +31,36 @@ export function useTreeKeyboard({
   expanded,
   setOpen,
   onSearch,
+  onEdit,
+  onCut,
+  onPaste,
+  onCancelCut,
   enabled,
 }: {
   containerRef: RefObject<HTMLElement | null>
   expanded: ReadonlySet<number>
   setOpen: (id: number, open: boolean) => void
   onSearch: () => void
+  onEdit: (kind: 'folder' | 'link', id: number) => void
+  onCut: (linkId: number) => void
+  /** Paste onto the focused row, or at the top level when none is focused. */
+  onPaste: (target: { kind: 'folder' | 'link'; id: number } | null) => void
+  /** Returns whether there was a cut to cancel. */
+  onCancelCut: () => boolean
   enabled: boolean
 }) {
-  const latest = useRef({ expanded, setOpen, onSearch })
+  const callbacks = {
+    expanded,
+    setOpen,
+    onSearch,
+    onEdit,
+    onCut,
+    onPaste,
+    onCancelCut,
+  }
+  const latest = useRef(callbacks)
   useEffect(() => {
-    latest.current = { expanded, setOpen, onSearch }
+    latest.current = callbacks
   })
 
   useEffect(() => {
@@ -138,6 +159,25 @@ export function useTreeKeyboard({
           if (!current) return
           handled()
           current.click()
+          return
+        case 'r':
+          if (!current) return
+          handled()
+          cb.onEdit(isFolder ? 'folder' : 'link', id)
+          return
+        case 'x':
+          if (!current || isFolder) return
+          handled()
+          cb.onCut(id)
+          return
+        case 'p':
+          handled()
+          cb.onPaste(
+            current ? { kind: isFolder ? 'folder' : 'link', id } : null,
+          )
+          return
+        case 'Escape':
+          if (cb.onCancelCut()) handled()
           return
         case '/':
           handled()

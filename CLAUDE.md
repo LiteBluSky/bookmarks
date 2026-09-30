@@ -121,8 +121,10 @@ moves to the top level. `resolveMove` turns a drop into
   (Ctrl+L/N/T/W/F) when adding more.
 - Tree, vim-style (`src/hooks/use-tree-keyboard.ts`): `j/k` down/up,
   `h` collapse / go to parent, `l` expand / into first child, `gg`/`G`
-  first/last, `o`/`Enter` open or toggle, `/` search. Arrow keys mirror
-  hjkl. Rows opt in with `data-tree-item`, `data-kind`, `data-id`,
+  first/last, `o`/`Enter` open or toggle, `r` edit, `/` search. Arrow keys
+  mirror hjkl. `x` cuts a link, `p` pastes it into the focused folder /
+  after the focused link (top level if nothing focused), `Esc` cancels
+  (`src/hooks/use-cut-link.ts`; sticky toast while cut). Rows opt in with `data-tree-item`, `data-kind`, `data-id`,
   `data-parent-id` on their focusable element.
 - In search: `Enter`/`↓` jumps to the first row, `Esc` clears.
 - All of it is off while a dialog is open or while typing in a field.
