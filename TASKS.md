@@ -60,6 +60,7 @@ it. Add new tasks under the right phase instead of doing unplanned work.
       matching ancestors visible, forces folders open while searching)
 - [x] `Ctrl+K` / `/` focus search, `Enter`/`↓` jumps into results, `Esc` clears
 - [x] `q` in the tree clears the search (no need to go back to the box)
+- [x] `n` / `N` jump to the next / previous visible link (wraps)
 - [x] `Ctrl+B` new link, `Ctrl+G` new folder
 
 ## 6. Theme

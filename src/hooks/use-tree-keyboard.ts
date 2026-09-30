@@ -7,6 +7,7 @@ import type { RefObject } from 'react'
 //   h / ←  collapse folder, or jump to parent folder
 //   l / →  expand folder, or step into its first child
 //   gg     first row         G      last row
+//   n / N  next / previous visible link (wraps around)
 //   o      open link / toggle folder (Enter works natively too)
 //   r      edit (rename / move) the focused folder or link
 //   d      delete the hovered row (or the focused one), after confirming
@@ -123,6 +124,22 @@ export function useTreeKeyboard({
           handled()
           focus(index === -1 ? list[0] : list[Math.max(index - 1, 0)])
           return
+        case 'n':
+        case 'N': {
+          const links = list.filter((el) => el.dataset.kind === 'link')
+          if (!links.length) return
+          handled()
+          const at = (el: HTMLElement) => list.indexOf(el)
+          focus(
+            e.key === 'n'
+              ? (links.find((el) => at(el) > index) ?? links[0])
+              : ([...links]
+                  .reverse()
+                  .find((el) => index === -1 || at(el) < index) ??
+                  links.at(-1)),
+          )
+          return
+        }
         case 'G':
           handled()
           focus(list.at(-1))
