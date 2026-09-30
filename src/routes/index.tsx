@@ -12,6 +12,7 @@ import { useMemo, useRef, useState } from 'react'
 import { BookmarkTree } from '@/components/bookmarks/bookmark-tree'
 import type { EditorState } from '@/components/bookmarks/editor'
 import { EditorDialogs } from '@/components/bookmarks/editor-dialogs'
+import { ImportExportMenu } from '@/components/bookmarks/import-export-menu'
 import { TreeDndProvider } from '@/components/bookmarks/tree-dnd'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
@@ -136,6 +137,7 @@ function Home() {
             Link
             <ShortcutHint name="newLink" />
           </Button>
+          <ImportExportMenu tree={tree} />
           <ThemeToggle />
         </div>
       </header>

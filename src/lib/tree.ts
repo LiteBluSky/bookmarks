@@ -1,4 +1,6 @@
 import type { Folder, Link } from '@/db/schema'
+import { EXPORT_FORMAT } from '@/lib/schemas'
+import type { BookmarksFile, ExportFolder, ExportLink } from '@/lib/schemas'
 
 export type FolderNode = {
   folder: Folder
@@ -141,4 +143,23 @@ export function isSelfOrAncestor(
     current = findFolder(tree, current)?.folder.parentId ?? null
   }
   return false
+}
+
+// The tree as an import/export file (same order, no ids or timestamps).
+export function toBookmarksFile(tree: Tree): BookmarksFile {
+  const link = ({ title, url, description }: Link): ExportLink => ({
+    title,
+    url,
+    ...(description && { description }),
+  })
+  const folder = (node: FolderNode): ExportFolder => ({
+    name: node.folder.name,
+    folders: node.folders.map(folder),
+    links: node.links.map(link),
+  })
+  return {
+    format: EXPORT_FORMAT,
+    folders: tree.folders.map(folder),
+    links: tree.links.map(link),
+  }
 }

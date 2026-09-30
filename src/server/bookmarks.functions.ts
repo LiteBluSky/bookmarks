@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
 
 import {
+  bookmarksFile,
   byId,
   folderInput,
   linkInput,
@@ -12,6 +13,7 @@ import {
 import {
   editFolder,
   editLink,
+  importFile,
   insertFolder,
   insertLink,
   loadTree,
@@ -68,3 +70,7 @@ export const moveBookmark = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await moveItem(data)
   })
+
+export const importBookmarks = createServerFn({ method: 'POST' })
+  .validator(bookmarksFile)
+  .handler(({ data }) => importFile(data))

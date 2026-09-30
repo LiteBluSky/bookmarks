@@ -97,13 +97,20 @@ Don't add pagination or per-folder lazy loading unless it's actually slow.
 
 ## UI
 
-Single page (`src/routes/index.tsx`): header (New folder, New link, theme
-menu), search box, then the tree. Folders are `Collapsible` rows (expanded
-state persisted in localStorage), links open in a new tab, and each row has
-a hover `DropdownMenu` (new link/subfolder here, edit/move, copy URL, move
-up/down, delete). Create/edit happens in a `Dialog`, delete confirms in an
+Single page (`src/routes/index.tsx`): header (New folder, New link,
+import/export menu, theme menu), search box, then the tree. Folders are
+`Collapsible` rows (expanded state persisted in localStorage), links open in
+a new tab, and each row has a hover `DropdownMenu` (new link/subfolder here,
+edit/move, copy URL, move up/down, delete). Create/edit happens in a `Dialog`, delete confirms in an
 `AlertDialog`. Theme: Light/Dark/System dropdown (`src/lib/theme.ts`; an
 inline head script applies it before first paint).
+
+**Import/export** (`src/components/bookmarks/import-export-menu.tsx`): JSON
+file `{ format: 1, folders: [{ name, folders, links }], links: [{ title, url,
+description? }] }` — nested, no ids. Export is built client-side
+(`toBookmarksFile` in `src/lib/tree.ts`); import is validated by
+`bookmarksFile` (client and server) and **appended** after the existing
+top-level items in one transaction — it never replaces or dedupes.
 
 **Drag and drop** (`src/components/bookmarks/tree-dnd.tsx`) is native HTML5
 DnD, no library. Folders and links are ordered separately (folders always

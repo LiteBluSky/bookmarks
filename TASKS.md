@@ -86,4 +86,6 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] Configurable app name (`VITE_APP_NAME`, default "Bookmarks"); neutral
       storage keys; project renamed to `bookmarks`
 - [x] Versioning: `pnpm version:patch|minor|major` (bump, commit, tag)
-- [ ] Optional: import/export bookmarks (JSON, or browser HTML bookmark file)
+- [x] Import/export bookmarks as JSON (header menu; import adds, never
+      replaces)
+- [ ] Optional: import a browser HTML bookmark file

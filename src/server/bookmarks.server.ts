@@ -2,7 +2,14 @@ import { asc, eq, isNull, max } from 'drizzle-orm'
 
 import { db } from '@/db'
 import { folders, links } from '@/db/schema'
-import type { FolderInput, LinkInput, MoveInput } from '@/lib/schemas'
+import type {
+  BookmarksFile,
+  ExportFolder,
+  ExportLink,
+  FolderInput,
+  LinkInput,
+  MoveInput,
+} from '@/lib/schemas'
 import { reorderIds } from '@/lib/tree'
 
 // Server-only DB helpers. Only import from *.functions.ts.
@@ -193,4 +200,53 @@ export async function moveItem({ kind, id, parentId, index }: MoveInput) {
       }
     }
   })
+}
+
+// Adds the file's contents after the existing top-level items (never
+// replaces anything). All or nothing.
+export async function importFile(file: BookmarksFile) {
+  const counts = { folders: 0, links: 0 }
+  const [folderStart, linkStart] = await Promise.all([
+    nextFolderPosition(null),
+    nextLinkPosition(null),
+  ])
+
+  await db.transaction(async (tx) => {
+    const addLinks = async (
+      items: Array<ExportLink>,
+      folderId: number | null,
+      start: number,
+    ) => {
+      if (!items.length) return
+      await tx.insert(links).values(
+        items.map((link, i) => ({
+          title: link.title || titleFromUrl(link.url),
+          url: link.url,
+          description: link.description || null,
+          folderId,
+          position: start + i,
+        })),
+      )
+      counts.links += items.length
+    }
+
+    const addFolders = async (
+      items: Array<ExportFolder>,
+      parentId: number | null,
+      start: number,
+    ) => {
+      for (const [i, folder] of items.entries()) {
+        const [result] = await tx
+          .insert(folders)
+          .values({ name: folder.name, parentId, position: start + i })
+        counts.folders++
+        await addFolders(folder.folders, result.insertId, 0)
+        await addLinks(folder.links, result.insertId, 0)
+      }
+    }
+
+    await addFolders(file.folders, null, folderStart)
+    await addLinks(file.links, null, linkStart)
+  })
+  return counts
 }

@@ -42,3 +42,31 @@ export const moveInput = z.object({
   index: z.number().int().min(0),
 })
 export type MoveInput = z.infer<typeof moveInput>
+
+// Import/export file: the whole tree, nested, without database ids.
+export const EXPORT_FORMAT = 1
+
+const exportLink = linkInput.pick({ title: true, url: true }).extend({
+  description: linkInput.shape.description.optional(),
+})
+export type ExportLink = z.infer<typeof exportLink>
+
+export type ExportFolder = {
+  name: string
+  folders: Array<ExportFolder>
+  links: Array<ExportLink>
+}
+const exportFolder: z.ZodType<ExportFolder> = z.lazy(() =>
+  z.object({
+    name: folderInput.shape.name,
+    folders: z.array(exportFolder).default([]),
+    links: z.array(exportLink).default([]),
+  }),
+)
+
+export const bookmarksFile = z.object({
+  format: z.literal(EXPORT_FORMAT),
+  folders: z.array(exportFolder).default([]),
+  links: z.array(exportLink).default([]),
+})
+export type BookmarksFile = z.infer<typeof bookmarksFile>
