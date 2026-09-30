@@ -54,9 +54,7 @@
       "indexes": {
         "folders_parent_idx": {
           "name": "folders_parent_idx",
-          "columns": [
-            "parent_id"
-          ],
+          "columns": ["parent_id"],
           "isUnique": false
         }
       },
@@ -65,12 +63,8 @@
           "name": "folders_parent_id_folders_id_fk",
           "tableFrom": "folders",
           "tableTo": "folders",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -143,9 +137,7 @@
       "indexes": {
         "links_folder_idx": {
           "name": "links_folder_idx",
-          "columns": [
-            "folder_id"
-          ],
+          "columns": ["folder_id"],
           "isUnique": false
         }
       },
@@ -154,12 +146,8 @@
           "name": "links_folder_id_folders_id_fk",
           "tableFrom": "links",
           "tableTo": "folders",
-          "columnsFrom": [
-            "folder_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["folder_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
