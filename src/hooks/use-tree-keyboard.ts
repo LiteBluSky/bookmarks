@@ -11,7 +11,8 @@ import type { RefObject } from 'react'
 //   r      edit (rename / move) the focused folder or link
 //   d      delete the hovered row (or the focused one), after confirming
 //   x      cut the focused link   p  paste it here   Esc  cancel the cut
-//   /      focus search       ?  show keyboard shortcuts
+//   /      focus search       q  clear the search
+//   ?      show keyboard shortcuts
 //
 // Rows opt in by putting these on their focusable element:
 //   data-tree-item, data-kind="folder|link", data-id, data-parent-id
@@ -34,6 +35,7 @@ export function useTreeKeyboard({
   expanded,
   setOpen,
   onSearch,
+  onClearSearch,
   onHelp,
   onEdit,
   onDelete,
@@ -46,6 +48,8 @@ export function useTreeKeyboard({
   expanded: ReadonlySet<number>
   setOpen: (id: number, open: boolean) => void
   onSearch: () => void
+  /** Returns whether there was a search to clear. */
+  onClearSearch: () => boolean
   onHelp: () => void
   onEdit: (kind: 'folder' | 'link', id: number) => void
   onDelete: (kind: 'folder' | 'link', id: number) => void
@@ -60,6 +64,7 @@ export function useTreeKeyboard({
     expanded,
     setOpen,
     onSearch,
+    onClearSearch,
     onHelp,
     onEdit,
     onDelete,
@@ -200,6 +205,9 @@ export function useTreeKeyboard({
           return
         case 'Escape':
           if (cb.onCancelCut()) handled()
+          return
+        case 'q':
+          if (cb.onClearSearch()) handled()
           return
         case '/':
           handled()

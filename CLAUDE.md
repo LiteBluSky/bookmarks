@@ -138,15 +138,15 @@ moves to the top level. `resolveMove` turns a drop into
 - Global (`src/lib/shortcuts.ts`): `Ctrl+K` search, `Ctrl+B` new link,
   `Ctrl+G` new folder (⌘ on macOS). Avoid browser-reserved combos
   (Ctrl+L/N/T/W/F) when adding more.
-- Tree, vim-style (`src/hooks/use-tree-keyboard.ts`): `j/k` down/up,
-  `h` collapse / go to parent, `l` expand / into first child, `gg`/`G`
-  first/last, `o`/`Enter` open or toggle, `r` edit, `d` delete (hovered row, else
-  focused; confirms first), `/` search. Arrow keys
-  mirror hjkl. `x` cuts a link, `p` pastes it into the focused folder /
+- Tree, vim-style (`src/hooks/use-tree-keyboard.ts`): `j/k` down/up, `h`
+  collapse / go to parent, `l` expand / into first child, `gg`/`G`
+  first/last, `o`/`Enter` open or toggle, `r` edit, `d` delete (hovered row,
+  else focused; confirms first), `/` search, `q` clear the search. Arrow
+  keys mirror hjkl. `x` cuts a link, `p` pastes it into the focused folder /
   after the focused link (top level if nothing focused), `Esc` cancels
-  (`src/hooks/use-cut-link.ts`; sticky toast while cut). Rows opt in with `data-tree-item`, `data-kind`, `data-id`,
-  `data-parent-id` on their focusable element, and `data-tree-row` on the
-  hover area (row + its menu).
+  (`src/hooks/use-cut-link.ts`; sticky toast while cut). Rows opt in with
+  `data-tree-item`, `data-kind`, `data-id`, `data-parent-id` on their
+  focusable element, and `data-tree-row` on the hover area (row + its menu).
 - `?` (or the header keyboard button) opens the shortcuts help
   (`src/components/bookmarks/shortcuts-dialog.tsx`) — keep its list in sync
   when adding or changing a shortcut.

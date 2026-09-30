@@ -49,6 +49,7 @@ const GROUPS: Array<{ title: string; shortcuts: Array<Shortcut> }> = [
       { keys: [['x']], action: 'Cut link' },
       { keys: [['p']], action: 'Paste cut link here' },
       { keys: [['Esc']], action: 'Cancel cut' },
+      { keys: [['q']], action: 'Clear search' },
     ],
   },
   {

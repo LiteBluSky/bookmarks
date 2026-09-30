@@ -85,6 +85,23 @@ function Home() {
     expanded,
     setOpen,
     onSearch: focusSearch,
+    onClearSearch: () => {
+      if (!searching) return false
+      // Folders stop being forced open, so expand the focused row's
+      // ancestors to keep it visible (and focused).
+      const active = document.activeElement
+      let parentId =
+        active instanceof HTMLElement && active.dataset.parentId
+          ? Number(active.dataset.parentId)
+          : null
+      while (parentId !== null) {
+        setOpen(parentId, true)
+        const id: number = parentId
+        parentId = data.folders.find((f) => f.id === id)?.parentId ?? null
+      }
+      setQuery('')
+      return true
+    },
     onHelp: () => setHelpOpen(true),
     onEdit: (kind, id) => {
       if (kind === 'folder') {
