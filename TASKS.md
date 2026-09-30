@@ -52,6 +52,7 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] `r` on a focused row opens its edit dialog
 - [x] `x` cut / `p` paste a link (sticky toast, `Esc` cancels)
 - [x] `d` deletes the hovered (or focused) row, via the confirm dialog
+- [x] Keyboard shortcuts help: header button + `?` (`h` stays collapse)
 
 ## 5. Find
 

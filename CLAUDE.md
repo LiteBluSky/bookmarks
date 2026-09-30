@@ -98,12 +98,13 @@ Don't add pagination or per-folder lazy loading unless it's actually slow.
 ## UI
 
 Single page (`src/routes/index.tsx`): header (New folder, New link,
-import/export menu, theme menu), search box, then the tree. Folders are
-`Collapsible` rows (expanded state persisted in localStorage), links open in
-a new tab, and each row has a hover `DropdownMenu` (new link/subfolder here,
-edit/move, copy URL, move up/down, delete). Create/edit happens in a `Dialog`, delete confirms in an
-`AlertDialog`. Theme: Light/Dark/System dropdown (`src/lib/theme.ts`; an
-inline head script applies it before first paint).
+import/export menu, shortcuts help, theme menu), search box, then the tree.
+Folders are `Collapsible` rows (expanded state persisted in localStorage),
+links open in a new tab, and each row has a hover `DropdownMenu` (new
+link/subfolder here, edit/move, copy URL, move up/down, delete). Create/edit
+happens in a `Dialog`, delete confirms in an `AlertDialog`. Theme:
+Light/Dark/System dropdown (`src/lib/theme.ts`; an inline head script
+applies it before first paint).
 
 **Import/export** (`src/components/bookmarks/import-export-menu.tsx`): JSON
 file `{ format: 1, folders: [{ name, folders, links }], links: [{ title, url,
@@ -135,6 +136,9 @@ moves to the top level. `resolveMove` turns a drop into
   (`src/hooks/use-cut-link.ts`; sticky toast while cut). Rows opt in with `data-tree-item`, `data-kind`, `data-id`,
   `data-parent-id` on their focusable element, and `data-tree-row` on the
   hover area (row + its menu).
+- `?` (or the header keyboard button) opens the shortcuts help
+  (`src/components/bookmarks/shortcuts-dialog.tsx`) — keep its list in sync
+  when adding or changing a shortcut.
 - In search: `Enter`/`↓` jumps to the first row, `Esc` clears.
 - All of it is off while a dialog is open or while typing in a field.
 

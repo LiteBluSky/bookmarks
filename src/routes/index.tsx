@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import {
   BookmarkIcon,
   FolderPlusIcon,
+  KeyboardIcon,
   PlusIcon,
   SearchIcon,
   SearchXIcon,
@@ -13,6 +14,7 @@ import { BookmarkTree } from '@/components/bookmarks/bookmark-tree'
 import type { EditorState } from '@/components/bookmarks/editor'
 import { EditorDialogs } from '@/components/bookmarks/editor-dialogs'
 import { ImportExportMenu } from '@/components/bookmarks/import-export-menu'
+import { ShortcutsDialog } from '@/components/bookmarks/shortcuts-dialog'
 import { TreeDndProvider } from '@/components/bookmarks/tree-dnd'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
@@ -58,6 +60,8 @@ function Home() {
 
   const [editor, setEditor] = useState<EditorState | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const dialogOpen = editorOpen || helpOpen
   const openEditor = (state: EditorState) => {
     setEditor(state)
     setEditorOpen(true)
@@ -80,6 +84,7 @@ function Home() {
     expanded,
     setOpen,
     onSearch: focusSearch,
+    onHelp: () => setHelpOpen(true),
     onEdit: (kind, id) => {
       if (kind === 'folder') {
         const folder = data.folders.find((f) => f.id === id)
@@ -101,7 +106,7 @@ function Home() {
     onCut: clipboard.cut,
     onPaste: clipboard.paste,
     onCancelCut: clipboard.cancel,
-    enabled: !editorOpen,
+    enabled: !dialogOpen,
   })
   // Disabled while a dialog is open so shortcuts don't stack editors.
   useShortcuts(
@@ -110,7 +115,7 @@ function Home() {
       newLink: () => openEditor({ kind: 'link', folderId: null }),
       newFolder: () => openEditor({ kind: 'folder', parentId: null }),
     },
-    !editorOpen,
+    !dialogOpen,
   )
 
   const isEmpty = !tree.folders.length && !tree.links.length
@@ -138,6 +143,15 @@ function Home() {
             <ShortcutHint name="newLink" />
           </Button>
           <ImportExportMenu tree={tree} />
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Keyboard shortcuts"
+            title="Keyboard shortcuts (?)"
+            onClick={() => setHelpOpen(true)}
+          >
+            <KeyboardIcon />
+          </Button>
           <ThemeToggle />
         </div>
       </header>
@@ -235,6 +249,7 @@ function Home() {
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />
+      <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
     </main>
   )
 }
