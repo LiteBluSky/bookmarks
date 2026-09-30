@@ -101,3 +101,12 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] Folder delete cascades in code (FK pragma isn't kept by libsql)
 - [x] Move existing MySQL data over (JSON export → import)
 - [x] README/CLAUDE.md: no DB setup; backup = Export JSON or copy the file
+
+## 10. Deploy anywhere
+
+- [x] `Dockerfile` (multi-stage, `node:22-slim`, non-root, `/data` volume),
+      `.dockerignore`, `compose.yaml`; `packageManager` pins pnpm
+- [x] GitHub Action: publish image to GHCR on `v*` tags (amd64 + arm64)
+- [x] README: deploy steps for Docker, Windows, Linux (systemd), macOS
+      (launchd) and NixOS (`oci-containers`)
+- [ ] Optional: native Nix flake + NixOS module (no container)

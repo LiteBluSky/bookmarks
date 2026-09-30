@@ -3,9 +3,10 @@
 A personal, local-only bookmark manager. The display name is configurable
 (`VITE_APP_NAME`, default "Bookmarks", read via `APP_NAME` in
 `src/lib/config.ts`) — never hardcode a product name in UI, titles or
-storage keys. It runs on this Windows machine at
-startup, serves on `http://localhost:8008`, and does one thing: store links,
-organised into folders and subfolders, shown as a file tree.
+storage keys. It runs on the owner's machine or home server (Windows
+natively, or Docker on any OS / NixOS), serves on `http://localhost:8008`,
+and does one thing: store links, organised into folders and subfolders,
+shown as a file tree.
 
 Keep it **clean, minimal and to the point**. No accounts, no sync, no tags,
 no previews/favicons scraping, no analytics. If a feature isn't about
@@ -175,11 +176,16 @@ Treat `eslint --fix` output as untrusted — re-run `typecheck` afterwards.
 
 See `.env.example`. Nothing is required; overrides (`DATABASE_PATH`,
 `VITE_APP_NAME`) go in `.env.local` (gitignored). Don't put `PORT` in
-`.env.local` — Vite picks it up and moves the dev server off 3000. The
-always-on production instance uses port 8008, set by `scripts/start.ps1` and
-run at logon by a Scheduled Task (`scripts/install-startup.ps1` /
-`uninstall-startup.ps1` / `stop.ps1`). Setup and deploy steps are in the
-README — keep them in sync when changing any of this.
+`.env.local` — Vite picks it up and moves the dev server off 3000.
+Production uses port 8008: on Windows it's set by `scripts/start.ps1`, run
+at logon by a Scheduled Task (`scripts/install-startup.ps1` /
+`uninstall-startup.ps1` / `stop.ps1`); in Docker by the `Dockerfile` (data
+in the `/data` volume, runs as uid 1000). `.github/workflows/docker.yml`
+publishes the image to `ghcr.io/liteblusky/bookmarks` on every `v*` tag
+(amd64 + arm64). Keep `.dockerignore` excluding `data/` and `.env*` so
+personal data never lands in an image. Deploy steps for Docker, Windows,
+Linux, macOS and NixOS are in the README — keep them in sync when changing
+any of this.
 
 ## Skill loading (TanStack Intent)
 

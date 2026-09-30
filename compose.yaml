@@ -1,0 +1,18 @@
+# docker compose up -d --build   →   http://localhost:8008
+# Data is kept in the named volume `bookmarks-data` (survives rebuilds).
+services:
+  bookmarks:
+    build:
+      context: .
+      args:
+        VITE_APP_NAME: ${VITE_APP_NAME:-Bookmarks}
+    # To use the published image instead of building locally:
+    # image: ghcr.io/liteblusky/bookmarks:latest
+    ports:
+      - '8008:8008'
+    volumes:
+      - bookmarks-data:/data
+    restart: unless-stopped
+
+volumes:
+  bookmarks-data:
