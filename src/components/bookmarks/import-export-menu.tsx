@@ -83,7 +83,13 @@ export function ImportExportMenu({ tree }: { tree: Tree }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon" aria-label="More" />}
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Import / export"
+            />
+          }
         >
           <EllipsisVerticalIcon />
         </DropdownMenuTrigger>

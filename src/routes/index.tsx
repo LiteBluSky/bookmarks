@@ -18,6 +18,7 @@ import { ShortcutsDialog } from '@/components/bookmarks/shortcuts-dialog'
 import { TreeDndProvider } from '@/components/bookmarks/tree-dnd'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import {
   Empty,
   EmptyContent,
@@ -123,36 +124,43 @@ function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-8">
-      <header className="flex items-center justify-between gap-4">
+      {/* Below 500px the actions drop under the title. */}
+      <header className="flex items-center justify-between gap-4 max-[500px]:flex-col max-[500px]:items-stretch">
         <h1 className="flex items-center gap-2 text-lg font-semibold">
           <BookmarkIcon />
           {APP_NAME}
         </h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => openEditor({ kind: 'folder', parentId: null })}
-          >
-            <FolderPlusIcon data-icon="inline-start" />
-            Folder
-            <ShortcutHint name="newFolder" />
-          </Button>
-          <Button onClick={() => openEditor({ kind: 'link', folderId: null })}>
-            <PlusIcon data-icon="inline-start" />
-            Link
-            <ShortcutHint name="newLink" />
-          </Button>
-          <ImportExportMenu tree={tree} />
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Keyboard shortcuts"
-            title="Keyboard shortcuts (?)"
-            onClick={() => setHelpOpen(true)}
-          >
-            <KeyboardIcon />
-          </Button>
-          <ThemeToggle />
+        <div className="flex justify-between gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => openEditor({ kind: 'folder', parentId: null })}
+            >
+              <FolderPlusIcon data-icon="inline-start" />
+              Folder
+              <ShortcutHint name="newFolder" />
+            </Button>
+            <Button
+              onClick={() => openEditor({ kind: 'link', folderId: null })}
+            >
+              <PlusIcon data-icon="inline-start" />
+              Link
+              <ShortcutHint name="newLink" />
+            </Button>
+          </div>
+          <ButtonGroup aria-label="Settings">
+            <ImportExportMenu tree={tree} />
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Keyboard shortcuts"
+              title="Keyboard shortcuts (?)"
+              onClick={() => setHelpOpen(true)}
+            >
+              <KeyboardIcon />
+            </Button>
+            <ThemeToggle />
+          </ButtonGroup>
         </div>
       </header>
 
