@@ -84,4 +84,5 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] Favicon (`public/favicon.svg`)
 - [x] Configurable app name (`VITE_APP_NAME`, default "Bookmarks"); neutral
       storage keys; project renamed to `bookmarks`
+- [x] Versioning: `pnpm version:patch|minor|major` (bump, commit, tag)
 - [ ] Optional: import/export bookmarks (JSON, or browser HTML bookmark file)

@@ -144,3 +144,17 @@ pnpm db:studio    # browse the data
 ```
 
 After any nontrivial change: `pnpm typecheck && pnpm lint && pnpm build`.
+
+### Releasing a version
+
+With a clean working tree:
+
+```bash
+pnpm version:patch   # 0.1.0 -> 0.1.1  (fixes)
+pnpm version:minor   # 0.1.0 -> 0.2.0  (new features)
+pnpm version:major   # 0.1.0 -> 1.0.0  (breaking changes)
+git push --follow-tags
+```
+
+Each bumps `version` in `package.json`, commits it as `Release vX.Y.Z` and
+tags it `vX.Y.Z`.

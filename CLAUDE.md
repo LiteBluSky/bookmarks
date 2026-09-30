@@ -143,6 +143,7 @@ pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint
 pnpm format         # prettier --write + eslint --fix
 pnpm generate-routes
+pnpm version:patch  # / version:minor / version:major — bump, commit, tag vX.Y.Z
 ```
 
 After any nontrivial change run `pnpm typecheck && pnpm lint && pnpm build`.
