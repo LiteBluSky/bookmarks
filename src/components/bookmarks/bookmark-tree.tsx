@@ -139,6 +139,7 @@ function FolderRow({
       >
         <div
           {...rowProps}
+          data-tree-row
           data-drop={dropZone}
           data-dragging={isDragging || undefined}
           className={cn('group/row flex items-center gap-1', DROP_ROW)}
@@ -279,6 +280,7 @@ function LinkRow({
     <li
       role="treeitem"
       {...rowProps}
+      data-tree-row
       data-drop={dropZone}
       data-dragging={isDragging || undefined}
       data-cut={isCut || undefined}

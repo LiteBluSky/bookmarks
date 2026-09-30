@@ -36,7 +36,7 @@ import { useTreeKeyboard } from '@/hooks/use-tree-keyboard'
 import { APP_NAME } from '@/lib/config'
 import { MOD_LABEL, SHORTCUTS, useShortcuts } from '@/lib/shortcuts'
 import type { ShortcutName } from '@/lib/shortcuts'
-import { buildTree, filterTree } from '@/lib/tree'
+import { buildTree, filterTree, findFolder } from '@/lib/tree'
 import { treeQueryOptions } from '@/server/bookmarks.functions'
 
 export const Route = createFileRoute('/')({
@@ -86,6 +86,15 @@ function Home() {
       } else {
         const link = data.links.find((l) => l.id === id)
         if (link) openEditor({ kind, link, folderId: link.folderId })
+      }
+    },
+    onDelete: (kind, id) => {
+      if (kind === 'folder') {
+        const node = findFolder(tree, id)
+        if (node) openEditor({ kind: 'delete-folder', node })
+      } else {
+        const link = data.links.find((l) => l.id === id)
+        if (link) openEditor({ kind: 'delete-link', link })
       }
     },
     onCut: clipboard.cut,

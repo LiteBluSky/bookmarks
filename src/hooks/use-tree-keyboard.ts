@@ -9,14 +9,17 @@ import type { RefObject } from 'react'
 //   gg     first row         G      last row
 //   o      open link / toggle folder (Enter works natively too)
 //   r      edit (rename / move) the focused folder or link
+//   d      delete the hovered row (or the focused one), after confirming
 //   x      cut the focused link   p  paste it here   Esc  cancel the cut
 //   /      focus search
 //
 // Rows opt in by putting these on their focusable element:
 //   data-tree-item, data-kind="folder|link", data-id, data-parent-id
-// (data-parent-id is "" at the top level).
+// (data-parent-id is "" at the top level). The row's hover area (the element
+// that also holds its menu) is marked with data-tree-row.
 
 const ITEM = '[data-tree-item]'
+const HOVERED_ROW = '[data-tree-row]:hover'
 const GG_TIMEOUT_MS = 500
 
 function isTyping(target: EventTarget | null) {
@@ -32,6 +35,7 @@ export function useTreeKeyboard({
   setOpen,
   onSearch,
   onEdit,
+  onDelete,
   onCut,
   onPaste,
   onCancelCut,
@@ -42,6 +46,7 @@ export function useTreeKeyboard({
   setOpen: (id: number, open: boolean) => void
   onSearch: () => void
   onEdit: (kind: 'folder' | 'link', id: number) => void
+  onDelete: (kind: 'folder' | 'link', id: number) => void
   onCut: (linkId: number) => void
   /** Paste onto the focused row, or at the top level when none is focused. */
   onPaste: (target: { kind: 'folder' | 'link'; id: number } | null) => void
@@ -54,6 +59,7 @@ export function useTreeKeyboard({
     setOpen,
     onSearch,
     onEdit,
+    onDelete,
     onCut,
     onPaste,
     onCancelCut,
@@ -165,6 +171,19 @@ export function useTreeKeyboard({
           handled()
           cb.onEdit(isFolder ? 'folder' : 'link', id)
           return
+        case 'd': {
+          const target =
+            containerRef.current
+              ?.querySelector(HOVERED_ROW)
+              ?.querySelector<HTMLElement>(ITEM) ?? current
+          if (!target) return
+          handled()
+          cb.onDelete(
+            target.dataset.kind === 'folder' ? 'folder' : 'link',
+            Number(target.dataset.id),
+          )
+          return
+        }
         case 'x':
           if (!current || isFolder) return
           handled()

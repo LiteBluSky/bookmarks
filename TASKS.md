@@ -51,6 +51,7 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] Vim motions in the tree (hjkl, gg/G, o) + arrow keys
 - [x] `r` on a focused row opens its edit dialog
 - [x] `x` cut / `p` paste a link (sticky toast, `Esc` cancels)
+- [x] `d` deletes the hovered (or focused) row, via the confirm dialog
 
 ## 5. Find
 
