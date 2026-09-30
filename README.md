@@ -85,20 +85,22 @@ once with
 
 ## Day-to-day
 
-| Task                              | Command                                                   |
-| --------------------------------- | --------------------------------------------------------- |
-| Deploy changes (after `git pull`) | `pnpm install; pnpm build; .\scripts\install-startup.ps1` |
-| Restart the server                | `.\scripts\install-startup.ps1`                           |
-| Check it's running                | `Get-ScheduledTask Bookmarks` / open `logs\server.log`    |
-| Stop until next logon             | `.\scripts\stop.ps1`                                      |
-| Start again after `stop.ps1`      | `Start-ScheduledTask Bookmarks`                           |
-| Stop and remove from startup      | `.\scripts\uninstall-startup.ps1`                         |
-| Back up the data                  | ⋮ menu → Export JSON, or copy `data\bookmarks.db`         |
-| Restore a backup                  | ⋮ menu → Import JSON (adds to what's there)               |
+| Task                              | Command                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------- |
+| Deploy changes (after `git pull`) | `pnpm install; .\scripts\stop.ps1; pnpm build; .\scripts\install-startup.ps1` |
+| Restart the server                | `.\scripts\install-startup.ps1`                                               |
+| Check it's running                | `Get-ScheduledTask Bookmarks` / open `logs\server.log`                        |
+| Stop until next logon             | `.\scripts\stop.ps1`                                                          |
+| Start again after `stop.ps1`      | `Start-ScheduledTask Bookmarks`                                               |
+| Stop and remove from startup      | `.\scripts\uninstall-startup.ps1`                                             |
+| Back up the data                  | ⋮ menu → Export JSON, or copy `data\bookmarks.db`                             |
+| Restore a backup                  | ⋮ menu → Import JSON (adds to what's there)                                   |
 
 Schema changes are applied automatically when the server starts, so a
-deploy never needs a separate database step. Copy `data\bookmarks.db` only
-while the server is stopped (`stop.ps1`).
+deploy never needs a separate database step. Stop the server before
+`pnpm build`: while it runs, Windows keeps the SQLite library in `.output`
+locked and the build fails with `EPERM`. Likewise, copy `data\bookmarks.db`
+only while the server is stopped.
 
 Re-running `install-startup.ps1` replaces the task and restarts the server,
 which is what picks up a new build. `Stop-ScheduledTask` on its own doesn't

@@ -93,6 +93,9 @@ Don't add pagination or per-folder lazy loading unless it's actually slow.
   `data/bookmarks.db`, created if missing) and runs the `drizzle/`
   migrations on startup — no manual DB step on deploy. Schema change: edit
   `schema.ts`, `pnpm db:generate`, commit the migration.
+- The running server locks `.output`'s native libsql binary, so
+  `pnpm build` fails with `EPERM` while it's up: run `scripts/stop.ps1`
+  first, then `install-startup.ps1` after.
 - Don't rely on foreign-key cascades: SQLite needs a per-connection pragma
   that libsql doesn't keep, so `removeFolder` deletes descendants itself.
   Keep deletes of anything with children explicit like that.
