@@ -57,7 +57,7 @@ function Home() {
   const visible = useMemo(() => filterTree(tree, query), [tree, query])
   const searching = query.trim().length > 0
 
-  const { expanded, setOpen } = useExpandedFolders()
+  const { expanded, setOpen, collapseAll } = useExpandedFolders()
 
   const [editor, setEditor] = useState<EditorState | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -84,6 +84,7 @@ function Home() {
     containerRef: treeRef,
     expanded,
     setOpen,
+    collapseAll,
     onSearch: focusSearch,
     onClearSearch: () => {
       if (!searching) return false

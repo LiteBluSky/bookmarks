@@ -41,6 +41,7 @@ const GROUPS: Array<{ title: string; shortcuts: Array<Shortcut> }> = [
       { keys: [['k'], ['↑']], action: 'Previous row' },
       { keys: [['h'], ['←']], action: 'Collapse folder / go to parent' },
       { keys: [['l'], ['→']], action: 'Expand folder / into first child' },
+      { keys: [['Shift', 'H']], action: 'Collapse all folders' },
       { keys: [['g', 'g']], action: 'First row' },
       { keys: [['G']], action: 'Last row' },
       { keys: [['n']], action: 'Next link' },

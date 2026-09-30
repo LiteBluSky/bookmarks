@@ -6,6 +6,7 @@ import type { RefObject } from 'react'
 //   j / ↓  next row          k / ↑  previous row
 //   h / ←  collapse folder, or jump to parent folder
 //   l / →  expand folder, or step into its first child
+//   H      collapse all folders
 //   gg     first row         G      last row
 //   n / N  next / previous visible link (wraps around)
 //   o      open link / toggle folder (Enter works natively too)
@@ -35,6 +36,7 @@ export function useTreeKeyboard({
   containerRef,
   expanded,
   setOpen,
+  collapseAll,
   onSearch,
   onClearSearch,
   onHelp,
@@ -48,6 +50,7 @@ export function useTreeKeyboard({
   containerRef: RefObject<HTMLElement | null>
   expanded: ReadonlySet<number>
   setOpen: (id: number, open: boolean) => void
+  collapseAll: () => void
   onSearch: () => void
   /** Returns whether there was a search to clear. */
   onClearSearch: () => boolean
@@ -64,6 +67,7 @@ export function useTreeKeyboard({
   const callbacks = {
     expanded,
     setOpen,
+    collapseAll,
     onSearch,
     onClearSearch,
     onHelp,
@@ -153,6 +157,21 @@ export function useTreeKeyboard({
           } else {
             lastG = now
           }
+          return
+        }
+        case 'H': {
+          handled()
+          // Keep focus visible: move it to the row's top-level folder.
+          let top = current
+          while (top?.dataset.parentId) {
+            const parentId = top.dataset.parentId
+            top = list.find(
+              (el) =>
+                el.dataset.kind === 'folder' && el.dataset.id === parentId,
+            )
+          }
+          cb.collapseAll()
+          if (top && top !== current) focus(top)
           return
         }
         case 'h':
