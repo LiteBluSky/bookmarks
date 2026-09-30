@@ -2,26 +2,32 @@ import { relations } from 'drizzle-orm'
 import {
   foreignKey,
   index,
-  int,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/mysql-core'
+} from 'drizzle-orm/sqlite-core'
+
+const timestamps = {
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date())
+    .$onUpdate(() => new Date()),
+}
 
 // A folder can nest inside another folder. parentId = null means root level.
-export const folders = mysqlTable(
+// The foreign keys document the shape; SQLite doesn't enforce them here (see
+// removeFolder for the cascade).
+export const folders = sqliteTable(
   'folders',
   {
-    id: int().primaryKey().autoincrement(),
-    name: varchar({ length: 255 }).notNull(),
-    parentId: int('parent_id'),
-    position: int().notNull().default(0),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { mode: 'date' })
-      .notNull()
-      .defaultNow()
-      .onUpdateNow(),
+    id: integer().primaryKey({ autoIncrement: true }),
+    name: text().notNull(),
+    parentId: integer('parent_id'),
+    position: integer().notNull().default(0),
+    ...timestamps,
   },
   (t) => [
     foreignKey({ columns: [t.parentId], foreignColumns: [t.id] }).onDelete(
@@ -32,22 +38,18 @@ export const folders = mysqlTable(
 )
 
 // A link lives in a folder, or at root level when folderId = null.
-export const links = mysqlTable(
+export const links = sqliteTable(
   'links',
   {
-    id: int().primaryKey().autoincrement(),
-    title: varchar({ length: 255 }).notNull(),
-    url: varchar({ length: 2048 }).notNull(),
+    id: integer().primaryKey({ autoIncrement: true }),
+    title: text().notNull(),
+    url: text().notNull(),
     description: text(),
-    folderId: int('folder_id').references(() => folders.id, {
+    folderId: integer('folder_id').references(() => folders.id, {
       onDelete: 'cascade',
     }),
-    position: int().notNull().default(0),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { mode: 'date' })
-      .notNull()
-      .defaultNow()
-      .onUpdateNow(),
+    position: integer().notNull().default(0),
+    ...timestamps,
   },
   (t) => [index('links_folder_idx').on(t.folderId)],
 )

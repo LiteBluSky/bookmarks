@@ -21,8 +21,8 @@ it. Add new tasks there rather than doing unplanned work.
 | ------------- | ----------------------------------------------------------------- |
 | Framework     | TanStack Start (React 19, file-based routing, server functions)   |
 | Server output | Nitro (node) → `.output/server/index.mjs`                         |
-| DB            | MySQL via `mysql2`                                                |
-| ORM           | Drizzle (`drizzle-orm/mysql2`, `drizzle-kit`)                     |
+| DB            | SQLite (one file) via `@libsql/client`                            |
+| ORM           | Drizzle (`drizzle-orm/libsql`, `drizzle-kit`)                     |
 | Data fetching | TanStack Query (SSR-integrated via `router-ssr-query`)            |
 | Forms         | TanStack Form + Zod                                               |
 | UI            | shadcn/ui (`base-nova`, **Base UI** engine) + Tailwind v4, lucide |
@@ -89,18 +89,25 @@ Don't add pagination or per-folder lazy loading unless it's actually slow.
 - Imports: `@/…` alias for `src/` (tsconfig `paths`, resolved by Vite via
   `tsconfigPaths`). Files run outside Vite (e.g.
   `drizzle.config.ts`) must use relative imports.
-- MySQL: `src/db/index.ts` builds its own pool and forces
-  `SET time_zone = '+00:00'` per connection — keep that.
+- SQLite: `src/db/index.ts` opens `DATABASE_PATH` (default
+  `data/bookmarks.db`, created if missing) and runs the `drizzle/`
+  migrations on startup — no manual DB step on deploy. Schema change: edit
+  `schema.ts`, `pnpm db:generate`, commit the migration.
+- Don't rely on foreign-key cascades: SQLite needs a per-connection pragma
+  that libsql doesn't keep, so `removeFolder` deletes descendants itself.
+  Keep deletes of anything with children explicit like that.
+- Name/title tie-breaks sort `collate nocase` (case-insensitive).
 - No auth. The server listens on all interfaces, so it's reachable from the
   LAN. This is deliberate (the owner accepted it); don't change it
   unasked.
 
 ## UI
 
-Single page (`src/routes/index.tsx`): header (New folder, New link,
-import/export menu, shortcuts help, theme menu), search box, then the tree.
-Folders are `Collapsible` rows (expanded state persisted in localStorage),
-links open in a new tab, and each row has a hover `DropdownMenu` (new
+Single page (`src/routes/index.tsx`): header (New folder, New link, then a
+`ButtonGroup` of import/export menu, shortcuts help and theme menu; below
+500px the buttons wrap under the title), search box, then the tree. Folders
+are `Collapsible` rows (expanded state persisted in localStorage), links
+open in a new tab, and each row has a hover `DropdownMenu` (new
 link/subfolder here, edit/move, copy URL, move up/down, delete). Create/edit
 happens in a `Dialog`, delete confirms in an `AlertDialog`. Theme:
 Light/Dark/System dropdown (`src/lib/theme.ts`; an inline head script
@@ -148,9 +155,8 @@ moves to the top level. `resolveMove` turns a drop into
 pnpm dev            # dev server on http://localhost:3000
 pnpm build          # production build -> .output/
 pnpm start          # run the built server (reads .env.local; PORT env, default 3000)
-pnpm db:push        # sync schema.ts to MySQL (dev)
-pnpm db:generate    # create a migration instead
-pnpm db:migrate     # apply migrations
+pnpm db:generate    # write a migration after editing schema.ts
+pnpm db:migrate     # apply migrations (the server also does this on start)
 pnpm db:studio      # browse data
 pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint
@@ -164,12 +170,13 @@ Treat `eslint --fix` output as untrusted — re-run `typecheck` afterwards.
 
 ## Environment
 
-See `.env.example`. Real values go in `.env.local` (gitignored):
-`DATABASE_URL`. Don't put `PORT` in `.env.local` — Vite picks it up and moves
-the dev server off 3000. The always-on production instance uses port 8008,
-set by `scripts/start.ps1` and run at logon by a Scheduled Task
-(`scripts/install-startup.ps1` / `uninstall-startup.ps1` / `stop.ps1`). Setup and deploy
-steps are in the README — keep them in sync when changing any of this.
+See `.env.example`. Nothing is required; overrides (`DATABASE_PATH`,
+`VITE_APP_NAME`) go in `.env.local` (gitignored). Don't put `PORT` in
+`.env.local` — Vite picks it up and moves the dev server off 3000. The
+always-on production instance uses port 8008, set by `scripts/start.ps1` and
+run at logon by a Scheduled Task (`scripts/install-startup.ps1` /
+`uninstall-startup.ps1` / `stop.ps1`). Setup and deploy steps are in the
+README — keep them in sync when changing any of this.
 
 ## Skill loading (TanStack Intent)
 

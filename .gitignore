@@ -12,5 +12,7 @@ dist-ssr
 __unconfig*
 todos.json
 logs
+# SQLite database (see DATABASE_PATH in .env.example)
+data
 # Junction to .agents/skills (absolute path, recreate per machine; see README)
 .claude/skills

@@ -4,7 +4,7 @@ A personal bookmark manager: links organised into folders and subfolders,
 shown as a file tree. No accounts, no sync. It runs on your own Windows
 machine, starts at logon and serves on **http://localhost:8008**.
 
-Stack: TanStack Start (React 19) on Nitro/Node, MySQL via Drizzle, shadcn/ui
+Stack: TanStack Start (React 19) on Nitro/Node, SQLite via Drizzle, shadcn/ui
 and Tailwind. See [`CLAUDE.md`](./CLAUDE.md) for architecture and
 conventions and [`TASKS.md`](./TASKS.md) for the work log.
 
@@ -14,47 +14,24 @@ conventions and [`TASKS.md`](./TASKS.md) for the work log.
 
 - **Node.js 22.9+** (needs `--env-file-if-exists`): https://nodejs.org
 - **pnpm**: `npm install -g pnpm`
-- **MySQL 8**: https://dev.mysql.com/downloads/installer/ (the default
-  `MySQL80` Windows service is fine)
 - **Git**
 
-### 2. Make sure MySQL starts with Windows
+No database server is needed: the data lives in a single SQLite file.
 
-In an **admin** PowerShell:
-
-```powershell
-Set-Service MySQL80 -StartupType Automatic
-Start-Service MySQL80
-```
-
-(Check the service name with `Get-Service *mysql*`.)
-
-### 3. Create the database
-
-```sql
-CREATE DATABASE bookmarks CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Use root, or create a dedicated user:
-
-```sql
-CREATE USER 'bookmarks'@'localhost' IDENTIFIED BY 'choose-a-password';
-GRANT ALL PRIVILEGES ON bookmarks.* TO 'bookmarks'@'localhost';
-```
-
-### 4. Get the code and configure it
+### 2. Get the code and build it
 
 ```powershell
 git clone <repo-url> bookmarks
 cd bookmarks
 pnpm install
-Copy-Item .env.example .env.local
+pnpm build
 ```
 
-Edit `.env.local` and set `DATABASE_URL`, e.g.
-`mysql://bookmarks:choose-a-password@localhost:3306/bookmarks`.
-Optionally set `VITE_APP_NAME` to change the name shown in the app.
-Don't put `PORT` in `.env.local` (it would move the dev server).
+There's nothing to configure. The database, `data\bookmarks.db`, is created
+with its tables the first time the server starts. To change a default (the
+database location, or the name shown in the app via `VITE_APP_NAME`), copy
+`.env.example` to `.env.local` and edit it. Don't put `PORT` in `.env.local`
+(it would move the dev server).
 
 If you use Claude Code here, link its copy of the shadcn skill (a junction
 holds an absolute path, so it isn't committed):
@@ -64,14 +41,7 @@ New-Item -ItemType Directory -Force .claude\skills | Out-Null
 New-Item -ItemType Junction -Path .claude\skills\shadcn -Target (Resolve-Path .agents\skills\shadcn).Path
 ```
 
-### 5. Create the tables and build
-
-```powershell
-pnpm db:push
-pnpm build
-```
-
-### 6. Install the startup task
+### 3. Install the startup task
 
 ```powershell
 .\scripts\install-startup.ps1
@@ -115,23 +85,28 @@ once with
 
 ## Day-to-day
 
-| Task                              | Command                                                                 |
-| --------------------------------- | ----------------------------------------------------------------------- |
-| Deploy changes (after `git pull`) | `pnpm install; pnpm db:push; pnpm build; .\scripts\install-startup.ps1` |
-| Restart the server                | `.\scripts\install-startup.ps1`                                         |
-| Check it's running                | `Get-ScheduledTask Bookmarks` / open `logs\server.log`                  |
-| Stop until next logon             | `.\scripts\stop.ps1`                                                    |
-| Start again after `stop.ps1`      | `Start-ScheduledTask Bookmarks`                                         |
-| Stop and remove from startup      | `.\scripts\uninstall-startup.ps1`                                       |
-| Back up the data                  | `mysqldump -u root -p bookmarks > bookmarks.sql`                        |
-| Restore a backup                  | `mysql -u root -p bookmarks < bookmarks.sql`                            |
+| Task                              | Command                                                   |
+| --------------------------------- | --------------------------------------------------------- |
+| Deploy changes (after `git pull`) | `pnpm install; pnpm build; .\scripts\install-startup.ps1` |
+| Restart the server                | `.\scripts\install-startup.ps1`                           |
+| Check it's running                | `Get-ScheduledTask Bookmarks` / open `logs\server.log`    |
+| Stop until next logon             | `.\scripts\stop.ps1`                                      |
+| Start again after `stop.ps1`      | `Start-ScheduledTask Bookmarks`                           |
+| Stop and remove from startup      | `.\scripts\uninstall-startup.ps1`                         |
+| Back up the data                  | ⋮ menu → Export JSON, or copy `data\bookmarks.db`         |
+| Restore a backup                  | ⋮ menu → Import JSON (adds to what's there)               |
+
+Schema changes are applied automatically when the server starts, so a
+deploy never needs a separate database step. Copy `data\bookmarks.db` only
+while the server is stopped (`stop.ps1`).
 
 Re-running `install-startup.ps1` replaces the task and restarts the server,
 which is what picks up a new build. `Stop-ScheduledTask` on its own doesn't
 stop the server (it only ends the `conhost` wrapper); use `stop.ps1`.
 
-To move your bookmarks to a new machine, dump the database on the old one
-and restore it on the new one after step 3.
+To move your bookmarks to a new machine, either Export JSON on the old one
+and Import it on the new one, or copy `data\bookmarks.db` across before the
+new server's first start.
 
 ## Development
 
@@ -141,6 +116,7 @@ pnpm typecheck
 pnpm lint
 pnpm format
 pnpm db:studio    # browse the data
+pnpm db:generate  # after editing src/db/schema.ts: write a migration (commit it)
 ```
 
 After any nontrivial change: `pnpm typecheck && pnpm lint && pnpm build`.

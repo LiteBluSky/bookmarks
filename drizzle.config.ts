@@ -1,13 +1,17 @@
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+
 import { config } from 'dotenv'
 import { defineConfig } from 'drizzle-kit'
 
 config({ path: ['.env.local', '.env'] })
 
+// Same default as src/db/index.ts.
+const path = resolve(process.env.DATABASE_PATH || 'data/bookmarks.db')
+
 export default defineConfig({
   out: './drizzle',
   schema: './src/db/schema.ts',
-  dialect: 'mysql',
-  dbCredentials: {
-    url: process.env.DATABASE_URL!,
-  },
+  dialect: 'sqlite',
+  dbCredentials: { url: pathToFileURL(path).href },
 })

@@ -1,4 +1,4 @@
-import { asc, eq, isNull, max } from 'drizzle-orm'
+import { asc, eq, inArray, isNull, max, sql } from 'drizzle-orm'
 
 import { db } from '@/db'
 import { folders, links } from '@/db/schema'
@@ -14,10 +14,14 @@ import { reorderIds } from '@/lib/tree'
 
 // Server-only DB helpers. Only import from *.functions.ts.
 
+// Sibling order: position, then name/title case-insensitively.
+const byFolderName = sql`${folders.name} collate nocase`
+const byLinkTitle = sql`${links.title} collate nocase`
+
 export async function loadTree() {
   const [allFolders, allLinks] = await Promise.all([
-    db.select().from(folders).orderBy(asc(folders.position), asc(folders.name)),
-    db.select().from(links).orderBy(asc(links.position), asc(links.title)),
+    db.select().from(folders).orderBy(asc(folders.position), byFolderName),
+    db.select().from(links).orderBy(asc(links.position), byLinkTitle),
   ])
   return { folders: allFolders, links: allLinks }
 }
@@ -80,8 +84,11 @@ function titleFromUrl(url: string) {
 export async function insertFolder(input: FolderInput) {
   await assertFolderExists(input.parentId)
   const position = await nextFolderPosition(input.parentId)
-  const [result] = await db.insert(folders).values({ ...input, position })
-  return { id: result.insertId }
+  const [row] = await db
+    .insert(folders)
+    .values({ ...input, position })
+    .returning({ id: folders.id })
+  return row
 }
 
 export async function editFolder(id: number, input: FolderInput) {
@@ -105,21 +112,37 @@ export async function editFolder(id: number, input: FolderInput) {
     .where(eq(folders.id, id))
 }
 
+// Deletes the folder with all its subfolders and links. Done by hand: SQLite
+// only honours ON DELETE CASCADE with a per-connection pragma, which libsql
+// doesn't keep across the connections it opens.
 export async function removeFolder(id: number) {
-  // FK cascades take care of subfolders and links.
-  await db.delete(folders).where(eq(folders.id, id))
+  const all = await db
+    .select({ id: folders.id, parentId: folders.parentId })
+    .from(folders)
+  const ids = [id]
+  // Array iteration also visits the ids pushed along the way.
+  for (const parentId of ids) {
+    for (const f of all) if (f.parentId === parentId) ids.push(f.id)
+  }
+  await db.transaction(async (tx) => {
+    await tx.delete(links).where(inArray(links.folderId, ids))
+    await tx.delete(folders).where(inArray(folders.id, ids))
+  })
 }
 
 export async function insertLink(input: LinkInput) {
   await assertFolderExists(input.folderId)
   const position = await nextLinkPosition(input.folderId)
-  const [result] = await db.insert(links).values({
-    ...input,
-    title: input.title || titleFromUrl(input.url),
-    description: input.description || null,
-    position,
-  })
-  return { id: result.insertId }
+  const [row] = await db
+    .insert(links)
+    .values({
+      ...input,
+      title: input.title || titleFromUrl(input.url),
+      description: input.description || null,
+      position,
+    })
+    .returning({ id: links.id })
+  return row
 }
 
 export async function editLink(id: number, input: LinkInput) {
@@ -163,7 +186,7 @@ export async function moveItem({ kind, id, parentId, index }: MoveInput) {
             ? isNull(folders.parentId)
             : eq(folders.parentId, parentId),
         )
-        .orderBy(asc(folders.position), asc(folders.name))
+        .orderBy(asc(folders.position), byFolderName)
       const order = reorderIds(
         siblings.map((s) => s.id),
         id,
@@ -184,7 +207,7 @@ export async function moveItem({ kind, id, parentId, index }: MoveInput) {
             ? isNull(links.folderId)
             : eq(links.folderId, parentId),
         )
-        .orderBy(asc(links.position), asc(links.title))
+        .orderBy(asc(links.position), byLinkTitle)
       const order = reorderIds(
         siblings.map((s) => s.id),
         id,
@@ -236,12 +259,13 @@ export async function importFile(file: BookmarksFile) {
       start: number,
     ) => {
       for (const [i, folder] of items.entries()) {
-        const [result] = await tx
+        const [row] = await tx
           .insert(folders)
           .values({ name: folder.name, parentId, position: start + i })
+          .returning({ id: folders.id })
         counts.folders++
-        await addFolders(folder.folders, result.insertId, 0)
-        await addLinks(folder.links, result.insertId, 0)
+        await addFolders(folder.folders, row.id, 0)
+        await addLinks(folder.links, row.id, 0)
       }
     }
 

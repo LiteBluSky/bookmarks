@@ -65,6 +65,8 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 
 - [x] Light/dark follows the OS
 - [x] Light/Dark/System theme menu
+- [x] Mobile header (<500px): buttons under the title; settings in a
+      `ButtonGroup`
 
 ## 7. Run on startup (localhost only)
 
@@ -90,3 +92,12 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] Import/export bookmarks as JSON (header menu; import adds, never
       replaces)
 - [ ] Optional: import a browser HTML bookmark file
+
+## 9. SQLite (zero-config deploy)
+
+- [x] Replace MySQL with SQLite (`@libsql/client`, file `data/bookmarks.db`,
+      `DATABASE_PATH` override); drop `mysql2`, `db:push`/`db:pull`
+- [x] Migrations in `drizzle/`, applied automatically on server start
+- [x] Folder delete cascades in code (FK pragma isn't kept by libsql)
+- [x] Move existing MySQL data over (JSON export → import)
+- [x] README/CLAUDE.md: no DB setup; backup = Export JSON or copy the file
