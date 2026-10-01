@@ -271,17 +271,7 @@ function LinkRow({
     { kind: 'link', link },
     link.url,
   )
-  const shift = useShiftItem(item, link.folderId)
   const indent = depth * INDENT_PX + CHEVRON_PX
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(link.url)
-      toast.add({ title: 'URL copied', type: 'success' })
-    } catch {
-      toast.add({ title: "Couldn't copy URL", type: 'error' })
-    }
-  }
 
   return (
     <li
@@ -331,38 +321,69 @@ function LinkRow({
           />
         )}
       </Button>
-      <RowMenu label={`Actions for ${link.title}`}>
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            onClick={() =>
-              onEdit({ kind: 'link', link, folderId: link.folderId })
-            }
-          >
-            <PencilIcon />
-            Edit or move
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={copy}>
-            <CopyIcon />
-            Copy URL
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onToggleFavorite(link.id)}>
-            {isFavorite ? <StarOffIcon /> : <StarIcon />}
-            {isFavorite ? 'Remove from favourites' : 'Add to favourites'}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <ShiftItems shift={shift} />
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => onEdit({ kind: 'delete-link', link })}
-          >
-            <Trash2Icon />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </RowMenu>
+      <LinkMenu
+        link={link}
+        onEdit={onEdit}
+        onToggleFavorite={onToggleFavorite}
+      />
     </li>
+  )
+}
+
+/** A link's hover `…` menu (tree rows and the favourites list). */
+export function LinkMenu({
+  link,
+  onEdit,
+  onToggleFavorite,
+}: {
+  link: Link
+  onEdit: OpenEditor
+  onToggleFavorite: (linkId: number) => void
+}) {
+  const isFavorite = link.favoritePosition !== null
+  const shift = useShiftItem({ kind: 'link', id: link.id }, link.folderId)
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link.url)
+      toast.add({ title: 'URL copied', type: 'success' })
+    } catch {
+      toast.add({ title: "Couldn't copy URL", type: 'error' })
+    }
+  }
+
+  return (
+    <RowMenu label={`Actions for ${link.title}`}>
+      <DropdownMenuGroup>
+        <DropdownMenuItem
+          onClick={() =>
+            onEdit({ kind: 'link', link, folderId: link.folderId })
+          }
+        >
+          <PencilIcon />
+          Edit or move
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={copy}>
+          <CopyIcon />
+          Copy URL
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onToggleFavorite(link.id)}>
+          {isFavorite ? <StarOffIcon /> : <StarIcon />}
+          {isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+      <ShiftItems shift={shift} />
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={() => onEdit({ kind: 'delete-link', link })}
+        >
+          <Trash2Icon />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+    </RowMenu>
   )
 }
 

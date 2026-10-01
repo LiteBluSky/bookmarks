@@ -1,18 +1,22 @@
-import { GlobeIcon, StarIcon } from 'lucide-react'
+import { GlobeIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import type { Link } from '@/db/schema'
 import { hostname } from '@/lib/tree'
+import type { OpenEditor } from './editor'
+import { LinkMenu } from './bookmark-tree'
 
 // Up to 9 favourite links above the tree; key 1-9 opens the matching one.
-// The star removes it from the favourites.
+// Each row has the same hover menu as the link in the tree.
 export function FavoritesList({
   favorites,
-  onRemove,
+  onEdit,
+  onToggleFavorite,
 }: {
   favorites: Array<Link>
-  onRemove: (linkId: number) => void
+  onEdit: OpenEditor
+  onToggleFavorite: (linkId: number) => void
 }) {
   if (!favorites.length) return null
   return (
@@ -25,7 +29,7 @@ export function FavoritesList({
       </h2>
       <ul className="flex flex-col">
         {favorites.map((link, i) => (
-          <li key={link.id} className="flex items-center gap-1">
+          <li key={link.id} className="group/row flex items-center gap-1">
             <Button
               variant="ghost"
               className="min-w-0 flex-1 justify-start"
@@ -46,15 +50,11 @@ export function FavoritesList({
                 {hostname(link.url)}
               </span>
             </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Remove ${link.title} from favourites`}
-              title="Remove from favourites"
-              onClick={() => onRemove(link.id)}
-            >
-              <StarIcon className="fill-current" />
-            </Button>
+            <LinkMenu
+              link={link}
+              onEdit={onEdit}
+              onToggleFavorite={onToggleFavorite}
+            />
           </li>
         ))}
       </ul>

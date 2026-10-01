@@ -191,7 +191,18 @@ function Home() {
         </div>
       </header>
 
-      <FavoritesList favorites={favorites} onRemove={toggleFavorite} />
+      {/* Own provider so the menu's move up/down works outside the tree. */}
+      <TreeDndProvider
+        tree={tree}
+        enabled={false}
+        onExpand={(id) => setOpen(id, true)}
+      >
+        <FavoritesList
+          favorites={favorites}
+          onEdit={openEditor}
+          onToggleFavorite={toggleFavorite}
+        />
+      </TreeDndProvider>
 
       <InputGroup>
         <InputGroupAddon>

@@ -128,8 +128,8 @@ Imported favourites go after the existing ones; any past the 9th are
 imported as plain links.
 
 **Favourites**: at most 9 (`MAX_FAVORITES`, enforced server-side in
-`setFavorite`). Listed above the search (`favorites-list.tsx`, star button
-removes); toggled from the link's row menu or `f`
+`setFavorite`). Listed above the search (`favorites-list.tsx`), each row
+with the same hover menu as in the tree (`LinkMenu`); toggled from the link's row menu or `f`
 (`src/hooks/use-favorite.ts`, optimistic).
 
 **Drag and drop** (`src/components/bookmarks/tree-dnd.tsx`) is native HTML5
