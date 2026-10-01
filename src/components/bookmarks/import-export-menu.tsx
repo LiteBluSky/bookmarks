@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/toast'
 import { APP_NAME } from '@/lib/config'
-import { bookmarksFile } from '@/lib/schemas'
+import { MAX_FAVORITES, bookmarksFile } from '@/lib/schemas'
 import type { BookmarksFile } from '@/lib/schemas'
 import { toBookmarksFile } from '@/lib/tree'
 import type { Tree } from '@/lib/tree'
@@ -62,10 +62,16 @@ export function ImportExportMenu({ tree }: { tree: Tree }) {
   const importFile = useMutation({
     mutationFn: async (file: File) =>
       importBookmarks({ data: await readFile(file) }),
-    onSuccess: async ({ folders, links }) => {
+    onSuccess: async ({ folders, links, favorites, skippedFavorites }) => {
       await queryClient.invalidateQueries(treeQueryOptions)
+      const notes = [
+        favorites > 0 && `${plural(favorites, 'favourite')} added.`,
+        skippedFavorites > 0 &&
+          `${plural(skippedFavorites, 'favourite')} skipped (max ${MAX_FAVORITES}).`,
+      ].filter(Boolean)
       toast.add({
         title: `Imported ${plural(folders, 'folder')} and ${plural(links, 'link')}`,
+        description: notes.join(' ') || undefined,
         type: 'success',
       })
     },

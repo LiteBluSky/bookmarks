@@ -57,7 +57,8 @@ it. Add new tasks there rather than doing unplanned work.
   `position`, timestamps. Deleting a folder cascades to its subfolders and
   links.
 - `links` — `id`, `title`, `url`, `description?`, `folderId` (`null` = root),
-  `position`, timestamps.
+  `position`, `favoritePosition?` (set = favourite; orders the favourites),
+  timestamps.
 - `position` orders siblings within the same parent (folders and links are
   ordered separately; folders render before links, like a file explorer).
 
@@ -119,10 +120,17 @@ applies it before first paint).
 
 **Import/export** (`src/components/bookmarks/import-export-menu.tsx`): JSON
 file `{ format: 1, folders: [{ name, folders, links }], links: [{ title, url,
-description? }] }` — nested, no ids. Export is built client-side
+description?, favorite? }] }` — nested, no ids; `favorite` is the 1–9 rank. Export is built client-side
 (`toBookmarksFile` in `src/lib/tree.ts`); import is validated by
 `bookmarksFile` (client and server) and **appended** after the existing
 top-level items in one transaction — it never replaces or dedupes.
+Imported favourites go after the existing ones; any past the 9th are
+imported as plain links.
+
+**Favourites**: at most 9 (`MAX_FAVORITES`, enforced server-side in
+`setFavorite`). Listed above the search (`favorites-list.tsx`, star button
+removes); toggled from the link's row menu or `f`
+(`src/hooks/use-favorite.ts`, optimistic).
 
 **Drag and drop** (`src/components/bookmarks/tree-dnd.tsx`) is native HTML5
 DnD, no library. Folders and links are ordered separately (folders always
@@ -141,7 +149,8 @@ moves to the top level. `resolveMove` turns a drop into
 - Tree, vim-style (`src/hooks/use-tree-keyboard.ts`): `j/k` down/up, `h`
   collapse / go to parent, `l` expand / into first child, `H` collapse all,
   `gg`/`G` first/last, `n`/`N` next/previous visible link (wraps),
-  `o`/`Enter` open or toggle, `r` edit, `d` delete (hovered row, else
+  `o`/`Enter` open or toggle, `f` add/remove favourite (hovered row, else
+  focused), `1`–`9` open that favourite in a new tab, `r` edit, `d` delete (hovered row, else
   focused; confirms first), `/` search, `q` clear the search. Arrow keys
   mirror hjkl. `x` cuts a link, `p` pastes it into the focused folder /
   after the focused link (top level if nothing focused), `Esc` cancels

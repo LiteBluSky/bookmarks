@@ -30,6 +30,11 @@ export type LinkInput = z.infer<typeof linkInput>
 
 export const byId = z.object({ id })
 
+// Favourites are opened with the number keys, so there are at most 9.
+export const MAX_FAVORITES = 9
+export const favoriteInput = z.object({ id, favorite: z.boolean() })
+export type FavoriteInput = z.infer<typeof favoriteInput>
+
 export const updateFolderInput = folderInput.extend({ id })
 export const updateLinkInput = linkInput.extend({ id })
 
@@ -48,6 +53,8 @@ export const EXPORT_FORMAT = 1
 
 const exportLink = linkInput.pick({ title: true, url: true }).extend({
   description: linkInput.shape.description.optional(),
+  // Favourite rank (1 = key 1). Imported ones go after existing favourites.
+  favorite: z.number().int().min(1).max(MAX_FAVORITES).optional(),
 })
 export type ExportLink = z.infer<typeof exportLink>
 

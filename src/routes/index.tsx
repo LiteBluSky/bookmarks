@@ -13,6 +13,7 @@ import { useMemo, useRef, useState } from 'react'
 import { BookmarkTree } from '@/components/bookmarks/bookmark-tree'
 import type { EditorState } from '@/components/bookmarks/editor'
 import { EditorDialogs } from '@/components/bookmarks/editor-dialogs'
+import { FavoritesList } from '@/components/bookmarks/favorites-list'
 import { ImportExportMenu } from '@/components/bookmarks/import-export-menu'
 import { ShortcutsDialog } from '@/components/bookmarks/shortcuts-dialog'
 import { TreeDndProvider } from '@/components/bookmarks/tree-dnd'
@@ -36,11 +37,12 @@ import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Separator } from '@/components/ui/separator'
 import { useCutLink } from '@/hooks/use-cut-link'
 import { useExpandedFolders } from '@/hooks/use-expanded-folders'
+import { useFavorite } from '@/hooks/use-favorite'
 import { useTreeKeyboard } from '@/hooks/use-tree-keyboard'
 import { APP_NAME } from '@/lib/config'
 import { MOD_LABEL, SHORTCUTS, useShortcuts } from '@/lib/shortcuts'
 import type { ShortcutName } from '@/lib/shortcuts'
-import { buildTree, filterTree, findFolder } from '@/lib/tree'
+import { buildTree, favoriteLinks, filterTree, findFolder } from '@/lib/tree'
 import { treeQueryOptions } from '@/server/bookmarks.functions'
 
 export const Route = createFileRoute('/')({
@@ -56,6 +58,8 @@ function Home() {
   const [query, setQuery] = useState('')
   const visible = useMemo(() => filterTree(tree, query), [tree, query])
   const searching = query.trim().length > 0
+  const favorites = useMemo(() => favoriteLinks(data.links), [data])
+  const toggleFavorite = useFavorite()
 
   const { expanded, setOpen, collapseAll } = useExpandedFolders()
 
@@ -125,6 +129,11 @@ function Home() {
     onCut: clipboard.cut,
     onPaste: clipboard.paste,
     onCancelCut: clipboard.cancel,
+    onToggleFavorite: toggleFavorite,
+    onOpenFavorite: (index) => {
+      const link = favorites.at(index)
+      if (link) window.open(link.url, '_blank', 'noreferrer')
+    },
     enabled: !dialogOpen,
   })
   // Disabled while a dialog is open so shortcuts don't stack editors.
@@ -181,6 +190,8 @@ function Home() {
           </ButtonGroup>
         </div>
       </header>
+
+      <FavoritesList favorites={favorites} onRemove={toggleFavorite} />
 
       <InputGroup>
         <InputGroupAddon>
@@ -264,6 +275,7 @@ function Home() {
               onToggle={setOpen}
               onEdit={openEditor}
               cutId={clipboard.cutId}
+              onToggleFavorite={toggleFavorite}
             />
           </TreeDndProvider>
         </div>

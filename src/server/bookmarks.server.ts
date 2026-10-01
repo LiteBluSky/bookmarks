@@ -1,11 +1,22 @@
-import { asc, eq, inArray, isNull, max, sql } from 'drizzle-orm'
+import {
+  asc,
+  count,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  max,
+  sql,
+} from 'drizzle-orm'
 
 import { db } from '@/db'
 import { folders, links } from '@/db/schema'
+import { MAX_FAVORITES } from '@/lib/schemas'
 import type {
   BookmarksFile,
   ExportFolder,
   ExportLink,
+  FavoriteInput,
   FolderInput,
   LinkInput,
   MoveInput,
@@ -171,6 +182,39 @@ export async function removeLink(id: number) {
   await db.delete(links).where(eq(links.id, id))
 }
 
+// Adds the link at the end of the favourites, or removes it.
+export async function setFavorite({ id, favorite }: FavoriteInput) {
+  if (!favorite) {
+    await db
+      .update(links)
+      .set({ favoritePosition: null })
+      .where(eq(links.id, id))
+    return
+  }
+  await db.transaction(async (tx) => {
+    const existing = (
+      await tx
+        .select({ favoritePosition: links.favoritePosition })
+        .from(links)
+        .where(eq(links.id, id))
+    ).at(0)
+    if (!existing) throw new Error('Link not found')
+    if (existing.favoritePosition !== null) return
+
+    const [row] = await tx
+      .select({ total: count(), last: max(links.favoritePosition) })
+      .from(links)
+      .where(isNotNull(links.favoritePosition))
+    if (row.total >= MAX_FAVORITES) {
+      throw new Error(`You can have up to ${MAX_FAVORITES} favourites`)
+    }
+    await tx
+      .update(links)
+      .set({ favoritePosition: (row.last ?? -1) + 1 })
+      .where(eq(links.id, id))
+  })
+}
+
 // Rewrites sibling positions 0..n so the moved item lands at `index`.
 export async function moveItem({ kind, id, parentId, index }: MoveInput) {
   await assertFolderExists(parentId)
@@ -225,14 +269,44 @@ export async function moveItem({ kind, id, parentId, index }: MoveInput) {
   })
 }
 
+// The file's favourites in rank order, mapped to their new favoritePosition
+// after the existing favourites. Whatever doesn't fit in the free slots is
+// imported as a plain link.
+async function importedFavorites(file: BookmarksFile) {
+  const found: Array<ExportLink> = []
+  const walk = (items: {
+    folders: Array<ExportFolder>
+    links: Array<ExportLink>
+  }) => {
+    for (const link of items.links) if (link.favorite) found.push(link)
+    items.folders.forEach(walk)
+  }
+  walk(file)
+  found.sort((a, b) => a.favorite! - b.favorite!)
+
+  const [row] = await db
+    .select({ total: count(), last: max(links.favoritePosition) })
+    .from(links)
+    .where(isNotNull(links.favoritePosition))
+  const fits = found.slice(0, Math.max(0, MAX_FAVORITES - row.total))
+  const start = (row.last ?? -1) + 1
+  return {
+    positions: new Map(fits.map((link, i) => [link, start + i])),
+    skipped: found.length - fits.length,
+  }
+}
+
 // Adds the file's contents after the existing top-level items (never
 // replaces anything). All or nothing.
 export async function importFile(file: BookmarksFile) {
-  const counts = { folders: 0, links: 0 }
-  const [folderStart, linkStart] = await Promise.all([
+  const counts = { folders: 0, links: 0, favorites: 0, skippedFavorites: 0 }
+  const [folderStart, linkStart, favorites] = await Promise.all([
     nextFolderPosition(null),
     nextLinkPosition(null),
+    importedFavorites(file),
   ])
+  counts.favorites = favorites.positions.size
+  counts.skippedFavorites = favorites.skipped
 
   await db.transaction(async (tx) => {
     const addLinks = async (
@@ -248,6 +322,7 @@ export async function importFile(file: BookmarksFile) {
           description: link.description || null,
           folderId,
           position: start + i,
+          favoritePosition: favorites.positions.get(link) ?? null,
         })),
       )
       counts.links += items.length

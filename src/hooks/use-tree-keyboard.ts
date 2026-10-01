@@ -13,6 +13,8 @@ import type { RefObject } from 'react'
 //   r      edit (rename / move) the focused folder or link
 //   d      delete the hovered row (or the focused one), after confirming
 //   x      cut the focused link   p  paste it here   Esc  cancel the cut
+//   f      add/remove the hovered (or focused) link as a favourite
+//   1-9    open that favourite in a new tab
 //   /      focus search       q  clear the search
 //   ?      show keyboard shortcuts
 //
@@ -45,6 +47,8 @@ export function useTreeKeyboard({
   onCut,
   onPaste,
   onCancelCut,
+  onToggleFavorite,
+  onOpenFavorite,
   enabled,
 }: {
   containerRef: RefObject<HTMLElement | null>
@@ -62,6 +66,9 @@ export function useTreeKeyboard({
   onPaste: (target: { kind: 'folder' | 'link'; id: number } | null) => void
   /** Returns whether there was a cut to cancel. */
   onCancelCut: () => boolean
+  onToggleFavorite: (linkId: number) => void
+  /** `index` is 0-based (key 1 = 0). */
+  onOpenFavorite: (index: number) => void
   enabled: boolean
 }) {
   const callbacks = {
@@ -76,6 +83,8 @@ export function useTreeKeyboard({
     onCut,
     onPaste,
     onCancelCut,
+    onToggleFavorite,
+    onOpenFavorite,
   }
   const latest = useRef(callbacks)
   useEffect(() => {
@@ -116,6 +125,17 @@ export function useTreeKeyboard({
       const cb = latest.current
 
       const handled = () => e.preventDefault()
+      // The hovered row wins over the focused one (for d and f).
+      const pointed = () =>
+        containerRef.current
+          ?.querySelector(HOVERED_ROW)
+          ?.querySelector<HTMLElement>(ITEM) ?? current
+
+      if (/^[1-9]$/.test(e.key)) {
+        handled()
+        cb.onOpenFavorite(Number(e.key) - 1)
+        return
+      }
 
       switch (e.key) {
         case 'j':
@@ -216,10 +236,7 @@ export function useTreeKeyboard({
           cb.onEdit(isFolder ? 'folder' : 'link', id)
           return
         case 'd': {
-          const target =
-            containerRef.current
-              ?.querySelector(HOVERED_ROW)
-              ?.querySelector<HTMLElement>(ITEM) ?? current
+          const target = pointed()
           if (!target) return
           handled()
           cb.onDelete(
@@ -233,6 +250,13 @@ export function useTreeKeyboard({
           handled()
           cb.onCut(id)
           return
+        case 'f': {
+          const target = pointed()
+          if (target?.dataset.kind !== 'link') return
+          handled()
+          cb.onToggleFavorite(Number(target.dataset.id))
+          return
+        }
         case 'p':
           handled()
           cb.onPaste(

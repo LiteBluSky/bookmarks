@@ -4,6 +4,7 @@ import { createServerFn } from '@tanstack/react-start'
 import {
   bookmarksFile,
   byId,
+  favoriteInput,
   folderInput,
   linkInput,
   moveInput,
@@ -20,6 +21,7 @@ import {
   moveItem,
   removeFolder,
   removeLink,
+  setFavorite,
 } from './bookmarks.server'
 
 // No auth by design: the app only listens on localhost (see CLAUDE.md).
@@ -63,6 +65,12 @@ export const deleteLink = createServerFn({ method: 'POST' })
   .validator(byId)
   .handler(async ({ data }) => {
     await removeLink(data.id)
+  })
+
+export const favoriteLink = createServerFn({ method: 'POST' })
+  .validator(favoriteInput)
+  .handler(async ({ data }) => {
+    await setFavorite(data)
   })
 
 export const moveBookmark = createServerFn({ method: 'POST' })

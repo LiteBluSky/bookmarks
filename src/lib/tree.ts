@@ -93,6 +93,13 @@ export function flattenFolders(
   return out
 }
 
+/** Favourite links in shortcut order (index 0 = key 1). */
+export function favoriteLinks(links: Array<Link>): Array<Link> {
+  return links
+    .filter((l) => l.favoritePosition !== null)
+    .sort((a, b) => a.favoritePosition! - b.favoritePosition!)
+}
+
 export function hostname(url: string) {
   try {
     return new URL(url).hostname.replace(/^www\./, '')
@@ -147,10 +154,20 @@ export function isSelfOrAncestor(
 
 // The tree as an import/export file (same order, no ids or timestamps).
 export function toBookmarksFile(tree: Tree): BookmarksFile {
-  const link = ({ title, url, description }: Link): ExportLink => ({
+  const all: Array<Link> = [...tree.links]
+  const stack = [...tree.folders]
+  while (stack.length) {
+    const node = stack.pop()!
+    all.push(...node.links)
+    stack.push(...node.folders)
+  }
+  const rank = new Map(favoriteLinks(all).map((l, i) => [l.id, i + 1]))
+
+  const link = ({ id, title, url, description }: Link): ExportLink => ({
     title,
     url,
     ...(description && { description }),
+    ...(rank.has(id) && { favorite: rank.get(id) }),
   })
   const folder = (node: FolderNode): ExportFolder => ({
     name: node.folder.name,

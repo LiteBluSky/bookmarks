@@ -63,6 +63,10 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] `n` / `N` jump to the next / previous visible link (wraps)
 - [x] `Shift+H` collapses all folders (focus moves to the top-level folder)
 - [x] `Ctrl+B` new link, `Ctrl+G` new folder
+- [x] Favourites (max 9): `f` / row menu toggles, list above the search with
+      a star to remove, `1`–`9` opens one in a new tab
+- [x] Favourites in import/export (`favorite` rank per link; extras past 9
+      import as plain links)
 
 ## 6. Theme
 

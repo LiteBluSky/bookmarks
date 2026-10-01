@@ -49,6 +49,9 @@ export const links = sqliteTable(
       onDelete: 'cascade',
     }),
     position: integer().notNull().default(0),
+    // Set when the link is a favourite; orders the favourites (shortcut
+    // 1-9 = their rank by this). null = not a favourite.
+    favoritePosition: integer('favorite_position'),
     ...timestamps,
   },
   (t) => [index('links_folder_idx').on(t.folderId)],

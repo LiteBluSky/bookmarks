@@ -11,6 +11,8 @@ import {
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
+  StarIcon,
+  StarOffIcon,
   Trash2Icon,
 } from 'lucide-react'
 
@@ -59,6 +61,7 @@ type TreeProps = {
   onEdit: OpenEditor
   /** Link currently cut (keyboard `x`), shown dimmed until pasted. */
   cutId: number | null
+  onToggleFavorite: (linkId: number) => void
 }
 
 export function BookmarkTree({ tree, ...props }: TreeProps & { tree: Tree }) {
@@ -108,6 +111,7 @@ function Level({
           depth={depth}
           onEdit={props.onEdit}
           isCut={props.cutId === link.id}
+          onToggleFavorite={props.onToggleFavorite}
         />
       ))}
     </>
@@ -252,12 +256,15 @@ function LinkRow({
   depth,
   onEdit,
   isCut,
+  onToggleFavorite,
 }: {
   link: Link
   depth: number
   onEdit: OpenEditor
   isCut: boolean
+  onToggleFavorite: (linkId: number) => void
 }) {
+  const isFavorite = link.favoritePosition !== null
   const item = { kind: 'link', id: link.id } as const
   const { rowProps, dropZone, isDragging } = useTreeRowDnd(
     item,
@@ -317,6 +324,12 @@ function LinkRow({
         <span className="truncate text-muted-foreground">
           {hostname(link.url)}
         </span>
+        {isFavorite && (
+          <StarIcon
+            aria-label="Favourite"
+            className="ml-auto fill-current text-muted-foreground"
+          />
+        )}
       </Button>
       <RowMenu label={`Actions for ${link.title}`}>
         <DropdownMenuGroup>
@@ -331,6 +344,10 @@ function LinkRow({
           <DropdownMenuItem onClick={copy}>
             <CopyIcon />
             Copy URL
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onToggleFavorite(link.id)}>
+            {isFavorite ? <StarOffIcon /> : <StarIcon />}
+            {isFavorite ? 'Remove from favourites' : 'Add to favourites'}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <ShiftItems shift={shift} />
