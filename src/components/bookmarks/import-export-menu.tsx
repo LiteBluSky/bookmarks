@@ -1,5 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { DownloadIcon, EllipsisVerticalIcon, UploadIcon } from 'lucide-react'
+import {
+  DownloadIcon,
+  EllipsisVerticalIcon,
+  MonitorDownIcon,
+  UploadIcon,
+} from 'lucide-react'
 import { useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -9,9 +14,11 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/toast'
+import { useInstallApp } from '@/hooks/use-install-app'
 import { APP_NAME } from '@/lib/config'
 import { MAX_FAVORITES, bookmarksFile } from '@/lib/schemas'
 import type { BookmarksFile } from '@/lib/schemas'
@@ -54,10 +61,30 @@ async function readFile(file: File): Promise<BookmarksFile> {
 }
 
 // Header menu: export the whole tree as JSON, or import a file in the same
-// format (added after what's already there, never replacing it).
+// format (added after what's already there, never replacing it). Also
+// installs the app (PWA) where the browser allows it.
 export function ImportExportMenu({ tree }: { tree: Tree }) {
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
+  const app = useInstallApp()
+
+  const install = async () => {
+    if (app.state === 'prompt') {
+      await app.install()
+    } else if (app.state === 'ios') {
+      toast.add({
+        title: 'Add to Home Screen',
+        description:
+          'In Safari, tap the Share button, then “Add to Home Screen”.',
+      })
+    } else {
+      toast.add({
+        title: "Your browser didn't offer to install",
+        description:
+          'Use the browser menu’s “Install app” / “Add to Home screen”. Installing needs https (or localhost).',
+      })
+    }
+  }
 
   const importFile = useMutation({
     mutationFn: async (file: File) =>
@@ -89,13 +116,7 @@ export function ImportExportMenu({ tree }: { tree: Tree }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Import / export"
-            />
-          }
+          render={<Button variant="outline" size="icon" aria-label="More" />}
         >
           <EllipsisVerticalIcon />
         </DropdownMenuTrigger>
@@ -114,6 +135,17 @@ export function ImportExportMenu({ tree }: { tree: Tree }) {
               Export JSON
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          {app.state !== 'installed' && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={install}>
+                  <MonitorDownIcon />
+                  Install app…
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <input

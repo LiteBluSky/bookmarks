@@ -5,8 +5,10 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { useEffect } from 'react'
 
 import { Toaster } from '@/components/ui/toast'
+import { registerServiceWorker } from '@/hooks/use-install-app'
 import { APP_NAME } from '@/lib/config'
 import { THEME_SCRIPT } from '@/lib/theme'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
@@ -32,6 +34,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         title: APP_NAME,
       },
+      // Installed app (PWA): see manifest[.]webmanifest.ts and public/sw.js.
+      { name: 'theme-color', content: '#ffffff' },
+      { name: 'mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-title', content: APP_NAME },
     ],
     links: [
       {
@@ -39,12 +46,16 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         href: appCss,
       },
       { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      { rel: 'manifest', href: '/manifest.webmanifest' },
     ],
   }),
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  useEffect(registerServiceWorker, [])
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>

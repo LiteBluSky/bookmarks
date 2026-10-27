@@ -117,3 +117,10 @@ it. Add new tasks under the right phase instead of doing unplanned work.
 - [x] README: deploy steps for Docker, Windows, Linux (systemd), macOS
       (launchd) and NixOS (`oci-containers`)
 - [ ] Optional: native Nix flake + NixOS module (no container)
+
+## 11. Installable app
+
+- [x] Web manifest (server route, follows `VITE_APP_NAME`) + PNG icons
+- [x] Service worker: offline read of the last-loaded bookmarks
+- [x] "Install app…" in the ⋮ menu (prompt on Android/desktop, hint on iOS)
+- [ ] HTTPS on the LAN (e.g. `tailscale serve`) so phones can install it

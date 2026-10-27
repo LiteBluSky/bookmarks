@@ -127,6 +127,20 @@ top-level items in one transaction — it never replaces or dedupes.
 Imported favourites go after the existing ones; any past the 9th are
 imported as plain links.
 
+**Installable app (PWA)**: the manifest is a server route
+(`src/routes/manifest[.]webmanifest.ts`, so the name follows
+`VITE_APP_NAME`); icons are in `public/` (`icon-192/512.png`,
+`icon-maskable-512.png`, `apple-touch-icon.png`, generated from the same
+glyph as `favicon.svg`). `public/sw.js` is cache-first for hashed
+`/assets/*` and network-first (falling back to cache) for everything else,
+so the last-loaded page — bookmarks included, since it's SSR'd — opens
+offline, read-only. It's registered in production builds only
+(`registerServiceWorker` in `src/hooks/use-install-app.ts`). The ⋮ menu's
+"Install app…" uses `beforeinstallprompt` where offered, else shows how
+(iOS: Share → Add to Home Screen). Install and the SW need a secure origin
+(https or localhost) — plain http on the LAN works as a website only. Bump
+the cache name in `sw.js` if its strategy changes.
+
 **Favourites**: at most 9 (`MAX_FAVORITES`, enforced server-side in
 `setFavorite`). Listed above the search (`favorites-list.tsx`), each row
 with the same hover menu as in the tree (`LinkMenu`); toggled from the link's row menu or `f`

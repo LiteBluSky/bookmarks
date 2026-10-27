@@ -19,6 +19,7 @@ export default [
       'eslint.config.js',
       'prettier.config.js',
       '.output/**',
+      'public/**',
       '.nitro/**',
       '.tanstack/**',
       'src/components/ui/**',

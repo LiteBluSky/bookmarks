@@ -246,6 +246,28 @@ Then `sudo nixos-rebuild switch`. The data is `/var/lib/bookmarks/bookmarks.db`.
   your profile → Packages → bookmarks → Package settings → Change
   visibility) or use the `login` block above.
 
+## Install as an app (phone / desktop)
+
+The app ships a web manifest and a service worker, so it can be installed
+and opened like a native app. Once it has loaded, it also opens **offline**,
+showing your bookmarks as they were last loaded (read-only: saving needs
+the server).
+
+- **Android (Chrome)**: ⋮ menu in the app → **Install app…**, or the
+  browser's own menu → _Install app_ / _Add to Home screen_.
+- **iPhone / iPad (Safari)**: Share → **Add to Home Screen** (the app's
+  _Install app…_ item shows the same hint; iOS has no install prompt).
+- **Desktop Chrome / Edge**: ⋮ menu → **Install app…**, or the install icon
+  in the address bar.
+
+Browsers only allow installing (and the offline service worker) on a
+**secure origin**: `https://…` or `http://localhost`. Opening
+`http://192.168.x.x:8008` from your phone works as a normal page but won't
+install or work offline. To install it on a phone, put it behind HTTPS, for
+example with Tailscale (`tailscale serve --bg 8008`, then open the
+`https://<machine>.<tailnet>.ts.net` address it prints) or a reverse proxy
+with a certificate (Caddy, nginx…).
+
 ## Data: backup and moving machines
 
 - **Backup**: ⋮ menu → **Export JSON** (works everywhere, while running), or
